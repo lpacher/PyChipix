@@ -1,1 +1,7 @@
 extra/*
+
+*.pyc
+
+test/*/pyc
+pychipix/*.pyc
+pychipix/*/*/.pyc
