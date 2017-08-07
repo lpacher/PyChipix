@@ -1,0 +1,6 @@
+#!/bin/sh
+
+export ROOTSYS=/home/pacher/scratch/devel/DAQ/local/ROOT/5.32/lin
+source $ROOTSYS/bin/thisroot.sh
+
+python pychipix $@
