@@ -22,9 +22,23 @@
 
 ## Python standard-library components
 import sys
+import os
 
 ## ROOT components
-import ROOT
+try :
+	import ROOT
+
+except ImportError :
+
+	print("\n**ERROR: ROOT components are required to run this application!\n")
+
+	if( os.name == 'nt') :
+		print("           call %ROOTSYS%\bin\thisroot.bat might solve this problem.\n")
+	else :
+		print("           source $ROOTSYS/bin/thisroot.(c)sh might solve this problem.\n")
+
+	raise SystemExit
+
 
 ## application components
 from TestCommands import TestCommandsGui
@@ -65,6 +79,8 @@ def main() :
 		print "Starting PixelScan GUI..."
 		w = PixelScanGui( ROOT.gClient.GetRoot(), 1300, 800 )
 		w.SetWMSizeHints( 1300, 800, 1300, 800, 1, 1 )
+
+		w.getFirmwareVersion()
 
 		## start the main event-looper
 		a.Run()

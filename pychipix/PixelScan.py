@@ -23,8 +23,11 @@ class PixelScanGui(ROOT.TGMainFrame) :
 	##________________________________________________________________________________
 	def __init__(self, parent, width, height) :
 
-		## create a TGMainFrame top level window
+		## create a TGMainFrame top-level window
 		ROOT.TGMainFrame.__init__(self, parent, width, height)
+
+		self.fWidth  = width
+		self.fHeight = height
 
 		## use hierarchical cleaning
 		self.SetCleanup(ROOT.kDeepCleanup)
@@ -32,6 +35,27 @@ class PixelScanGui(ROOT.TGMainFrame) :
 		## set window title
 		self.SetWindowName( "CHIPIX DEMO - PixelScan" )
 
+		
+
+
+		#########################
+		##   internal frames   ##
+		#########################
+		self.commonFrame = ROOT.TGHorizontalFrame(self, self.fWidth, 10, ROOT.kHorizontalFrame)
+
+		self.tabsFrame = ROOT.TGTab(self, 650, 400)
+		self.tabsFrame.DrawBorder()
+
+		self.settingsTab    = self.tabsFrame.AddTab("   Settings   ")
+		self.measurementTab = self.tabsFrame.AddTab("   Measurement   ")
+
+
+
+		##############################################
+		##   declare here all buttons and widgets   ##
+		##############################################
+
+		## add a menu-bar at the top of the window
 		self.menuBar = ROOT.TGMenuBar(self, 1, 10, ROOT.kHorizontalFrame);
 		self.menuBar.AddPopup("&File")
 		self.menuBar.AddPopup("&Edit")
@@ -40,21 +64,73 @@ class PixelScanGui(ROOT.TGMainFrame) :
 		self.menuBar.AddPopup("&Tools")
 		self.menuBar.AddPopup("&Help")
 		self.AddFrame(self.menuBar, ROOT.TGLayoutHints(ROOT.kLHintsTop|ROOT.kLHintsLeft, 5, 5, 10, 50) )
+		#self.popupMenuTools = ROOT.TGPopupMenu(ROOT.gClient.GetRoot());
+
+		## TGTextButtons
+		self.exitButton       = ROOT.TGTextButton( self.commonFrame, "   &Exit   ")
+		self.connectButton    = ROOT.TGTextButton( self.commonFrame, "   &Connect   ")
+		self.disconnectButton = ROOT.TGTextButton( self.commonFrame, "   &Disconnect   ")
+		#self.startScanButton
+		#self.loadDataButton
+
+		## TGlabels
+		self.boardNumberLabel      = ROOT.TGLabel(self.commonFrame, "Board number")
+		self.timeoutLabel          = ROOT.TGLabel(self.commonFrame, "Timeout (ms)")
+		self.firmwareVersionLabel  = ROOT.TGLabel(self.commonFrame, "Firmware version")
+
+		#self.TPmodeLabel
+		#self.TPphaseLabel
+		#self.TPframeDelayLabel
+		#self.TPnumPulsesLabel
+		#self.TPframeIntervalLabel
+		#self.TPdebugWidthlabel
+
+		#self.triggerDelayLabel
+		#self.firstPixelLabel
+		#self.lastPixelLabel
+		#self.pixelStepLabel
+
+
+		## TGNumberEntry
+		self.boardNumberEntry      = ROOT.TGNumberEntry(self.commonFrame, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7      )
+		self.timeoutEntry          = ROOT.TGNumberEntry(self.commonFrame, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 31     )
+		self.firmwareVersionEntry  = ROOT.TGNumberEntry(self.commonFrame, 0, 9, 999, ROOT.TGNumberFormat.kNESHex,     ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 1048575)
+
+		self.TPmodeEntry           = ROOT.TGNumberEntry(self.measurementTab, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7      )
+		self.TPphaseEntry          = ROOT.TGNumberEntry(self.measurementTab, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7      )
+		self.TPframeDelayEntry     = ROOT.TGNumberEntry(self.measurementTab, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7      )
+		self.TPnumPulsesEntry      = ROOT.TGNumberEntry(self.measurementTab, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7      )
+		self.TPframeIntervalEntry  = ROOT.TGNumberEntry(self.measurementTab, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7      )
+		self.TPdebugWidthEntry     = ROOT.TGNumberEntry(self.measurementTab, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7      )
+
+		## TRootEmbeddedCanvas
+		self.rootEmbeddedCanvas = ROOT.TRootEmbeddedCanvas("cvs", self.measurementTab, 1200, 500)
+
+
+		#########################################
+		##   frame insertion and positioning   ##
+		#########################################
+
+		self.commonFrame.AddFrame(self.boardNumberLabel,     ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
+		self.commonFrame.AddFrame(self.boardNumberEntry,     ROOT.TGLayoutHints( ROOT.kLHintsTop,   0, 10, 0, 0) )
+		self.commonFrame.AddFrame(self.timeoutLabel,         ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
+		self.commonFrame.AddFrame(self.timeoutEntry,         ROOT.TGLayoutHints( ROOT.kLHintsTop,   0, 10, 0, 0) )
+		self.commonFrame.AddFrame(self.firmwareVersionLabel, ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
+		self.commonFrame.AddFrame(self.firmwareVersionEntry, ROOT.TGLayoutHints( ROOT.kLHintsTop,   0, 10, 0, 0) )
+		self.commonFrame.AddFrame(self.connectButton,        ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
+		self.commonFrame.AddFrame(self.disconnectButton,     ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
+		self.commonFrame.AddFrame(self.exitButton,           ROOT.TGLayoutHints( ROOT.kLHintsTop, 200, 10, 0, 0) )
+
+		self.measurementTab.AddFrame(self.rootEmbeddedCanvas, ROOT.TGLayoutHints(ROOT.kLHintsTop|ROOT.kLHintsBottom, 10, 0, 0, 15) )
+
+		self.AddFrame(self.commonFrame)
+		self.AddFrame(self.tabsFrame, ROOT.TGLayoutHints(ROOT.kLHintsExpandX|ROOT.kLHintsExpandY, 40, 20, 30, 20) )
 
 
 
-		self.popupMenuTools = ROOT.TGPopupMenu(ROOT.gClient.GetRoot());
-
-
-		## frames
-		#self.topFrame = ROOT.TGHorizontalFrame(self, width, height, ROOT.kHorizontalFrame )
-
-		self.plotsCanvas = ROOT.TRootEmbeddedCanvas("cvs", self, 1200, 600)
-		self.AddFrame(self.plotsCanvas, ROOT.TGLayoutHints(ROOT.kLHintsTop|ROOT.kLHintsLeft, 50, 0, 180, 50) )
-
-		self.plotsCanvas.GetCanvas().Divide(3,3)
-		self.plotsCanvas.GetCanvas().SetGrid()
-		#self.plotsCanvas.GetCanvas().SetFillColor(ROOT.kBlack)
+		self.rootEmbeddedCanvas.GetCanvas().Divide(3,3)
+		#self.rootEmbeddedCanvas.GetCanvas().SetGrid()
+		#self.rootEmbeddedCanvas.GetCanvas().SetFillColor(ROOT.kBlack)
 
 		#self.h = ROOT.TH1F()
 		self.h1 = ROOT.TH1F("h1","h", 100, -5, 5) ; self.h1.FillRandom("gaus", 1000)
@@ -67,35 +143,42 @@ class PixelScanGui(ROOT.TGMainFrame) :
 		self.h8 = ROOT.TH1F("h8","h", 100, -5, 5) ; self.h8.FillRandom("gaus", 1000)
 		self.h9 = ROOT.TH1F("h9","h", 100, -5, 5) ; self.h9.FillRandom("gaus", 1000)
 
-		self.plotsCanvas.GetCanvas().cd(1) ; self.h1.Draw()
-		self.plotsCanvas.GetCanvas().cd(2) ; self.h2.Draw()
-		self.plotsCanvas.GetCanvas().cd(3) ; self.h3.Draw()
-		self.plotsCanvas.GetCanvas().cd(4) ; self.h4.Draw()
-		self.plotsCanvas.GetCanvas().cd(5) ; self.h5.Draw()
-		self.plotsCanvas.GetCanvas().cd(6) ; self.h6.Draw()
-		self.plotsCanvas.GetCanvas().cd(7) ; self.h7.Draw()
-		self.plotsCanvas.GetCanvas().cd(8) ; self.h8.Draw()
-		self.plotsCanvas.GetCanvas().cd(9) ; self.h9.Draw()
+		self.rootEmbeddedCanvas.GetCanvas().cd(1) ; self.h1.Draw()
+		self.rootEmbeddedCanvas.GetCanvas().cd(2) ; self.h2.Draw()
+		self.rootEmbeddedCanvas.GetCanvas().cd(3) ; self.h3.Draw()
+		self.rootEmbeddedCanvas.GetCanvas().cd(4) ; self.h4.Draw()
+		self.rootEmbeddedCanvas.GetCanvas().cd(5) ; self.h5.Draw()
+		self.rootEmbeddedCanvas.GetCanvas().cd(6) ; self.h6.Draw()
+		self.rootEmbeddedCanvas.GetCanvas().cd(7) ; self.h7.Draw()
+		self.rootEmbeddedCanvas.GetCanvas().cd(8) ; self.h8.Draw()
+		self.rootEmbeddedCanvas.GetCanvas().cd(9) ; self.h9.Draw()
 
 
-		#self.plotsCanvas.GetCanvas().ForceUpdate()
+		#self.rootEmbeddedCanvas.GetCanvas().ForceUpdate()
 
 
 		#ROOT.gPad.Update()
 
 
-		#self.topFrame.AddFrame(self.plotsCanvas, ROOT.TGLayoutHints(ROOT.kLHintsTop|ROOT.kLHintsLeft, 500, 100, 100, 100))
+		#self.topFrame.AddFrame(self.rootEmbeddedCanvas, ROOT.TGLayoutHints(ROOT.kLHintsTop|ROOT.kLHintsLeft, 500, 100, 100, 100))
 
-
-		## dispatchers
+		###############################
+		##   callbacks dispatchers   ##
+		###############################
 
 		## connect the 'X' window button to exit
-		self.ExitDispatcher = ROOT.TPyDispatcher( self.ExitCallback )
+		self.ExitDispatcher = ROOT.TPyDispatcher( self.exitCallback )
 
 
 
-		## map dispatched callbacks to buttons etc.
-		self.Connect( "CloseWindow()", "TPyDispatcher", self.ExitDispatcher, "Dispatch()" )
+		#########################################################
+		##   map dispatched callbacks to buttons and widgets   ##
+		#########################################################
+
+		## exit/quit
+		self.Connect            ("CloseWindow()", "TPyDispatcher", self.ExitDispatcher, "Dispatch()")
+		self.exitButton.Connect ("Clicked()",     "TPyDispatcher", self.ExitDispatcher, "Dispatch()")
+
 
 
 		## show the gui
@@ -125,9 +208,22 @@ class PixelScanGui(ROOT.TGMainFrame) :
 		#self.SetWMSizeHints( width, height, width, height, 1, 1 )
 
 	##________________________________________________________________________________
-	def ExitCallback( self ) :
+	def exitCallback( self ) :
 
-		## close the ROOT TApplication
+		## close the main ROOT TApplication event loop
 		print "Bye!"
 		ROOT.gApplication.Terminate(0)
 		raise SystemExit
+
+	##________________________________________________________________________________
+	def getBoardNumber(self) :
+		self.BOARD_NUMBER = self.boardNumberEntry.GetNumberEntry().GetIntNumber()
+
+	##________________________________________________________________________________
+	def getTimeout(self) :
+		self.TIMEOUT = self.timeoutEntry.GetNumberEntry().GetIntNumber()
+
+	##________________________________________________________________________________
+	def getFirmwareVersion(self) :
+		self.FIRMWARE_VERSION = self.firmwareVersionEntry.GetNumberEntry().GetHexNumber()
+
