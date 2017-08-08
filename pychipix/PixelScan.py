@@ -20,35 +20,61 @@ import ROOT
 
 class PixelScanGui(ROOT.TGMainFrame) :
 
+	"""PixelScanGui class. Used to perform either fixed-threshold\ncharge-scans or fixed-charge threshold scans."""
+
 	##________________________________________________________________________________
-	def __init__(self, parent, width, height) :
+	def __init__(self, w=1300, h=800) :
+
+		## window size
+		self.fWidth  = w
+		self.fHeight = h
 
 		## create a TGMainFrame top-level window
-		ROOT.TGMainFrame.__init__(self, parent, width, height)
+		ROOT.TGMainFrame.__init__(self, ROOT.gClient.GetRoot(), self.fWidth, self.fHeight, ROOT.kVerticalFrame)
 
-		self.fWidth  = width
-		self.fHeight = height
-
-		## use hierarchical cleaning
+		## turn on automatic cleanup in this frame and and all child frames (hierarchical)
 		self.SetCleanup(ROOT.kDeepCleanup)
 
-		## set window title
-		self.SetWindowName( "CHIPIX DEMO - PixelScan" )
+		## give a position hint at startup
+		#xStart = 100
+		#yStart = 100
+		#self.SetWMPosition(xStart, yStart)
 
-		
+		## use INFN logo for window icon
+		#self.SetIconPixmap("./INFN.gif")
+
+		## set top-level window name
+		self.SetWindowName("INFN Torino / CHIPIX DEMO - PixelScan")
+
+		## give the window manager minimum and maximum size hints
+		self.SetWMSizeHints(self.fWidth, self.fHeight, self.fWidth, self.fHeight, 1, 1)   ## **NOTE: fixed-size hints
+
+		## set the initial state of the window (either kNormalState or kIconicState)
+		#self.SetWMState(ROOT.kIconicState)
+		self.SetWMState(ROOT.kNormalState)
 
 
 		#########################
 		##   internal frames   ##
 		#########################
-		self.commonFrame = ROOT.TGHorizontalFrame(self, self.fWidth, 10, ROOT.kHorizontalFrame)
 
-		self.tabsFrame = ROOT.TGTab(self, 650, 400)
-		self.tabsFrame.DrawBorder()
+		## menu-bar frame (File Edit, etc.)
+		self.fMenuBarFrame = ROOT.TGHorizontalFrame(self, self.fWidth, 10, ROOT.kHorizontalFrame, ROOT.kChildFrame)
 
-		self.settingsTab    = self.tabsFrame.AddTab("   Settings   ")
-		self.measurementTab = self.tabsFrame.AddTab("   Measurement   ")
+		## common frame (board-number, timeout etc.)
+		self.fCommonFrame = ROOT.TGHorizontalFrame(self, self.fWidth, 10, ROOT.kHorizontalFrame, ROOT.kChildFrame)
 
+		## "Settings" and "Measurement" frames
+		self.fTabsFrame = ROOT.TGTab(self, 650, 10)
+		self.fTabsFrame.DrawBorder()
+
+		self.settingsTab    = self.fTabsFrame.AddTab("Settings")
+		self.measurementTab = self.fTabsFrame.AddTab("Measurement")
+
+
+		self.AddFrame(self.fMenuBarFrame, ROOT.TGLayoutHints(ROOT.kLHintsExpandX|ROOT.kLHintsExpandY, 0, 0, 0, 0) )
+		self.AddFrame(self.fCommonFrame,  ROOT.TGLayoutHints(ROOT.kLHintsExpandX|ROOT.kLHintsExpandY, 0, 0, 30, 0) )
+		self.AddFrame(self.fTabsFrame,     ROOT.TGLayoutHints(ROOT.kLHintsExpandX|ROOT.kLHintsExpandY, 0, 0, 30, 0) )
 
 
 		##############################################
@@ -56,27 +82,28 @@ class PixelScanGui(ROOT.TGMainFrame) :
 		##############################################
 
 		## add a menu-bar at the top of the window
-		self.menuBar = ROOT.TGMenuBar(self, 1, 10, ROOT.kHorizontalFrame);
-		self.menuBar.AddPopup("&File")
-		self.menuBar.AddPopup("&Edit")
-		self.menuBar.AddPopup("&View")
-		self.menuBar.AddPopup("&Options")
-		self.menuBar.AddPopup("&Tools")
-		self.menuBar.AddPopup("&Help")
-		self.AddFrame(self.menuBar, ROOT.TGLayoutHints(ROOT.kLHintsTop|ROOT.kLHintsLeft, 5, 5, 10, 50) )
+		self.fMenuBar = ROOT.TGMenuBar(self.fMenuBarFrame, 1, 10, ROOT.kHorizontalFrame)
+
+		self.fMenuBar.AddPopup("&File")
+		self.fMenuBar.AddPopup("&Edit")
+		self.fMenuBar.AddPopup("&View")
+		self.fMenuBar.AddPopup("&Options")
+		self.fMenuBar.AddPopup("&Tools")
+		self.fMenuBar.AddPopup("&Help")
+
 		#self.popupMenuTools = ROOT.TGPopupMenu(ROOT.gClient.GetRoot());
 
 		## TGTextButtons
-		self.exitButton       = ROOT.TGTextButton( self.commonFrame, "   &Exit   ")
-		self.connectButton    = ROOT.TGTextButton( self.commonFrame, "   &Connect   ")
-		self.disconnectButton = ROOT.TGTextButton( self.commonFrame, "   &Disconnect   ")
+		self.exitButton       = ROOT.TGTextButton(self.fCommonFrame, "&Quit"      ) ;   self.exitButton.SetMargins       (10, 10, 1, 1)
+		self.connectButton    = ROOT.TGTextButton(self.fCommonFrame, "&Connect"   ) ;   self.connectButton.SetMargins    (10, 10, 1, 1)
+		self.disconnectButton = ROOT.TGTextButton(self.fCommonFrame, "&Disconnect") ;   self.disconnectButton.SetMargins (10, 10, 1, 1)
 		#self.startScanButton
 		#self.loadDataButton
 
 		## TGlabels
-		self.boardNumberLabel      = ROOT.TGLabel(self.commonFrame, "Board number")
-		self.timeoutLabel          = ROOT.TGLabel(self.commonFrame, "Timeout (ms)")
-		self.firmwareVersionLabel  = ROOT.TGLabel(self.commonFrame, "Firmware version")
+		self.boardNumberLabel      = ROOT.TGLabel(self.fCommonFrame, "Board number")
+		self.timeoutLabel          = ROOT.TGLabel(self.fCommonFrame, "Timeout (ms)")
+		self.firmwareVersionLabel  = ROOT.TGLabel(self.fCommonFrame, "Firmware version")
 
 		#self.TPmodeLabel
 		#self.TPphaseLabel
@@ -92,9 +119,23 @@ class PixelScanGui(ROOT.TGMainFrame) :
 
 
 		## TGNumberEntry
-		self.boardNumberEntry      = ROOT.TGNumberEntry(self.commonFrame, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7      )
-		self.timeoutEntry          = ROOT.TGNumberEntry(self.commonFrame, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 31     )
-		self.firmwareVersionEntry  = ROOT.TGNumberEntry(self.commonFrame, 0, 9, 999, ROOT.TGNumberFormat.kNESHex,     ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 1048575)
+		self.boardNumberEntry = ROOT.TGNumberEntry(
+			self.fCommonFrame, 0, 10, -1,
+			ROOT.TGNumberFormat.kNESInteger,
+			ROOT.TGNumberFormat.kNEANonNegative,
+			ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7)
+
+		self.timeoutEntry = ROOT.TGNumberEntry(
+			self.fCommonFrame, 1000, 10, -1,
+			ROOT.TGNumberFormat.kNESInteger,
+			ROOT.TGNumberFormat.kNEANonNegative,
+			ROOT.TGNumberFormat.kNELLimitMinMax, 0, 10000)
+
+		self.firmwareVersionEntry = ROOT.TGNumberEntry(
+			self.fCommonFrame, 0, 9, 999,
+			ROOT.TGNumberFormat.kNESHex,
+			ROOT.TGNumberFormat.kNEANonNegative,
+			ROOT.TGNumberFormat.kNELLimitMinMax, 0, 65535)
 
 		self.TPmodeEntry           = ROOT.TGNumberEntry(self.measurementTab, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7      )
 		self.TPphaseEntry          = ROOT.TGNumberEntry(self.measurementTab, 0, 9, 999, ROOT.TGNumberFormat.kNESInteger, ROOT.TGNumberFormat.kNEANonNegative, ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7      )
@@ -111,20 +152,25 @@ class PixelScanGui(ROOT.TGMainFrame) :
 		##   frame insertion and positioning   ##
 		#########################################
 
-		self.commonFrame.AddFrame(self.boardNumberLabel,     ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
-		self.commonFrame.AddFrame(self.boardNumberEntry,     ROOT.TGLayoutHints( ROOT.kLHintsTop,   0, 10, 0, 0) )
-		self.commonFrame.AddFrame(self.timeoutLabel,         ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
-		self.commonFrame.AddFrame(self.timeoutEntry,         ROOT.TGLayoutHints( ROOT.kLHintsTop,   0, 10, 0, 0) )
-		self.commonFrame.AddFrame(self.firmwareVersionLabel, ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
-		self.commonFrame.AddFrame(self.firmwareVersionEntry, ROOT.TGLayoutHints( ROOT.kLHintsTop,   0, 10, 0, 0) )
-		self.commonFrame.AddFrame(self.connectButton,        ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
-		self.commonFrame.AddFrame(self.disconnectButton,     ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
-		self.commonFrame.AddFrame(self.exitButton,           ROOT.TGLayoutHints( ROOT.kLHintsTop, 200, 10, 0, 0) )
+		## menu bar
+		self.AddFrame(self.fMenuBar, ROOT.TGLayoutHints(ROOT.kLHintsTop|ROOT.kLHintsLeft, 5, 5, 10, 50) )
+
+
+		## common frame
+
+		self.fCommonFrame.AddFrame(self.boardNumberLabel,     ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
+		self.fCommonFrame.AddFrame(self.boardNumberEntry,     ROOT.TGLayoutHints( ROOT.kLHintsTop,   0, 10, 0, 0) )
+		self.fCommonFrame.AddFrame(self.timeoutLabel,         ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
+		self.fCommonFrame.AddFrame(self.timeoutEntry,         ROOT.TGLayoutHints( ROOT.kLHintsTop,   0, 10, 0, 0) )
+		self.fCommonFrame.AddFrame(self.firmwareVersionLabel, ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
+		self.fCommonFrame.AddFrame(self.firmwareVersionEntry, ROOT.TGLayoutHints( ROOT.kLHintsTop,   0, 10, 0, 0) )
+		self.fCommonFrame.AddFrame(self.connectButton,        ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
+		self.fCommonFrame.AddFrame(self.disconnectButton,     ROOT.TGLayoutHints( ROOT.kLHintsTop,  20, 10, 0, 0) )
+		self.fCommonFrame.AddFrame(self.exitButton,           ROOT.TGLayoutHints( ROOT.kLHintsTop, 200, 10, 0, 0) )
 
 		self.measurementTab.AddFrame(self.rootEmbeddedCanvas, ROOT.TGLayoutHints(ROOT.kLHintsTop|ROOT.kLHintsBottom, 10, 0, 0, 15) )
 
-		self.AddFrame(self.commonFrame)
-		self.AddFrame(self.tabsFrame, ROOT.TGLayoutHints(ROOT.kLHintsExpandX|ROOT.kLHintsExpandY, 40, 20, 30, 20) )
+
 
 
 
@@ -192,6 +238,7 @@ class PixelScanGui(ROOT.TGMainFrame) :
 
 	##________________________________________________________________________________
 	def popup(self) :
+
 		## populate the GUI
 		self.MapSubwindows()
 
@@ -212,18 +259,21 @@ class PixelScanGui(ROOT.TGMainFrame) :
 
 		## close the main ROOT TApplication event loop
 		print "Bye!"
+		self.SendCloseMessage()
 		ROOT.gApplication.Terminate(0)
 		raise SystemExit
 
 	##________________________________________________________________________________
 	def getBoardNumber(self) :
 		self.BOARD_NUMBER = self.boardNumberEntry.GetNumberEntry().GetIntNumber()
-
+		return self.BOARD_NUMBER
 	##________________________________________________________________________________
 	def getTimeout(self) :
 		self.TIMEOUT = self.timeoutEntry.GetNumberEntry().GetIntNumber()
+		return self.TIMEOUT
 
 	##________________________________________________________________________________
 	def getFirmwareVersion(self) :
 		self.FIRMWARE_VERSION = self.firmwareVersionEntry.GetNumberEntry().GetHexNumber()
+		return self.FIRMWARE_VERSION
 

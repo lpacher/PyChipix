@@ -77,10 +77,9 @@ def main() :
 	elif( sys.argv[1] == "PixelScan" ) :
 
 		print "Starting PixelScan GUI..."
-		w = PixelScanGui( ROOT.gClient.GetRoot(), 1300, 800 )
-		w.SetWMSizeHints( 1300, 800, 1300, 800, 1, 1 )
+		w = PixelScanGui()
 
-		w.getFirmwareVersion()
+		print w.__doc__
 
 		## start the main event-looper
 		a.Run()
