@@ -4,5 +4,8 @@ extra/*
 
 test/*
 pychipix/*.pyc
+pychipix/*.pyo
+
 pychipix/*/*/.pyc
+pychipix/*/*/.pyo
 
