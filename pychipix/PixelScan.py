@@ -16,8 +16,10 @@
 # {Trace}
 #----------------------------------------------------------------------------------------------------
 
+## import ROOT components
 import ROOT
 
+## custom classes
 from CommonFrame import MenuBar, CommonFrame
 
 class PixelScanGui(ROOT.TGMainFrame) :
@@ -26,6 +28,8 @@ class PixelScanGui(ROOT.TGMainFrame) :
 
 	##________________________________________________________________________________
 	def __init__(self, w=1300, h=800) :
+
+		"""constructor"""
 
 		## window size
 		self.fWidth  = w
@@ -60,16 +64,23 @@ class PixelScanGui(ROOT.TGMainFrame) :
 		##   internal frames   ##
 		#########################
 
+		## insert menu bar and common frame (board number, firmware version, etc.)
 		self.fMenuBar = MenuBar(self)
 		self.fCommonFrame = CommonFrame(self)
 
 
-		## "Settings" and "Measurement" frames
-		#self.fTabsFrame = ROOT.TGTab(self)
-		#self.fTabsFrame.DrawBorder()
+		## create "Settings", "Measurement" and "Pixel map" tabs
+		self.fTabsFrame = ROOT.TGTab(self)
+		self.fTabsFrame.DrawBorder()
 
-		#self.settingsTab    = self.fTabsFrame.AddTab("Settings")
-		#self.measurementTab = self.fTabsFrame.AddTab("Measurement")
+		self.fSettingsTab    = self.fTabsFrame.AddTab("   Settings   ")
+		self.fMeasurementTab = self.fTabsFrame.AddTab("   Measurement   ")
+		self.fPixelMapTab    = self.fTabsFrame.AddTab("   Pixel map    ")
+
+		## build tabs using custom class methods
+		self.buildSettingsTab()
+		self.buildMeasurementTab()
+		self.buildPixelMapTab()
 
 
 		## TGlabels
@@ -124,8 +135,7 @@ class PixelScanGui(ROOT.TGMainFrame) :
 			ROOT.TGNumberFormat.kNELLimitMinMax, 0, 7)
 
 
-		## TRootEmbeddedCanvas
-		self.rootEmbeddedCanvas = ROOT.TRootEmbeddedCanvas("cvs", self.measurementTab, 1200, 500)
+
 
 		"""
 
@@ -135,6 +145,7 @@ class PixelScanGui(ROOT.TGMainFrame) :
 
 		self.AddFrame(self.fMenuBar,     ROOT.TGLayoutHints(ROOT.kLHintsExpandX, 5, 5, 10, 0))
 		self.AddFrame(self.fCommonFrame, ROOT.TGLayoutHints(ROOT.kLHintsExpandX, 5, 5, 10, 0))
+		self.AddFrame(self.fTabsFrame,   ROOT.TGLayoutHints(ROOT.kLHintsExpandX|ROOT.kLHintsExpandY, 10, 10, 15, 10))
 
 
 		"""
@@ -205,6 +216,7 @@ class PixelScanGui(ROOT.TGMainFrame) :
 
 	##________________________________________________________________________________
 	def __del__( self ) :
+		"""destructor"""
 		self.Cleanup()
 		self.DeleteWindow()
 
@@ -216,7 +228,7 @@ class PixelScanGui(ROOT.TGMainFrame) :
 
 		## initialize the layout algorithm via Resize()
 		self.Resize( self.GetDefaultSize() )
-		
+
 		## pop-up the main frame
 		self.MapWindow()
 		#self.Resize( width, height )
@@ -248,4 +260,25 @@ class PixelScanGui(ROOT.TGMainFrame) :
 	def getFirmwareVersion(self) :
 		self.FIRMWARE_VERSION = self.firmwareVersionEntry.GetNumberEntry().GetHexNumber()
 		return self.FIRMWARE_VERSION
+
+	##________________________________________________________________________________
+	def buildSettingsTab(self) :
+		print "Test passed"
+
+	##________________________________________________________________________________
+	def buildMeasurementTab(self) :
+
+		## TGVerticalFrames
+		#self.f
+
+
+		## TRootEmbeddedCanvas
+		self.fRootEmbeddedCanvas = ROOT.TRootEmbeddedCanvas("fRootEmbeddedCanvas", self.fMeasurementTab, 1200, 500)
+		self.fMeasurementTab.AddFrame(self.fRootEmbeddedCanvas, ROOT.TGLayoutHints(ROOT.kLHintsExpandX, 10, 10, 100, 10))
+
+
+
+	##________________________________________________________________________________
+	def buildPixelMapTab(self) :
+		print "Test passed 3"
 

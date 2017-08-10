@@ -60,7 +60,7 @@ def main() :
 	"""main application entry point"""
 
 	a = ROOT.gApplication
-	a.ExecuteFile("./lib/style.cxx")
+	#a.ExecuteFile("./lib/style.cxx")
 	#ROOT.gROOT.ProcessLine("./lib/style.cxx")
 
 	#try :
@@ -69,7 +69,9 @@ def main() :
 
 		print "Starting TestCommands GUI..."
 
-		w = TestCommandsGui( ROOT.gClient.GetRoot(), 900, 650 )
+		w = TestCommandsGui()
+
+		print w.__doc__
 
 		## start the main event-looper
 		a.Run()
