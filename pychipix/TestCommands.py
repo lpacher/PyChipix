@@ -184,7 +184,7 @@ class TestCommandsGui( ROOT.TGMainFrame ) :
 		self.fReadTxFifoDataCountButton  = ROOT.TGTextButton(self.fFpgaTabVerticalFrames[2], "Read TX data FIFO data count")
 		self.fReadTxFifoButton           = ROOT.TGTextButton(self.fFpgaTabVerticalFrames[2], "Read TX FIFO")
 		self.fReadTxFifoCountMaxButton   = ROOT.TGTextButton(self.fFpgaTabVerticalFrames[2], "Read TX FIFO count max.")
-		self.fFlushTxFifoButton          = ROOT.TGTextButton(self.fFpgaTabVerticalFrames[2], "Fush TX FIFO")
+		self.fFlushTxFifoButton          = ROOT.TGTextButton(self.fFpgaTabVerticalFrames[2], "Flush TX FIFO")
 		self.fFlushEventsButton          = ROOT.TGTextButton(self.fFpgaTabVerticalFrames[2], "Flush events")
 
 		self.fResetClkCountersButton.SetMargins(10, 10, 1, 1)
@@ -258,16 +258,76 @@ class TestCommandsGui( ROOT.TGMainFrame ) :
 			ROOT.TGNumberFormat.kNELLimitMinMax, 0, 99999)
 
 		self.fAdcCodeLabel = ROOT.TGLabel(self.fAdcTab, "Returned ADC code")
-		self.fAdcCodeText  = ROOT.TGTextEntry(self.fAdcTab)
+
+		self.fAdcCodeText = ROOT.TGTextEntry(self.fAdcTab)
+		#self.fAdcCodeText.SetEnabled(ROOT.kFALSE)
+		self.fAdcCodeText.DrawBorder()
+		self.fAdcCodeText.SetAlignment(ROOT.kTextRight)
+		self.fAdcCodeText.SetMaxLength(4)
+
+		self.fAdcCodeRadixFrame = ROOT.TGButtonGroup(self.fAdcTab, " Radix ", ROOT.kVerticalFrame)
+
+		self.fAdcCodeFormatDec = ROOT.TGRadioButton(self.fAdcCodeRadixFrame, "Dec", 0)
+		self.fAdcCodeFormatHex = ROOT.TGRadioButton(self.fAdcCodeRadixFrame, "Hex", 1)
+
+		## default state
+		#self.fAdcCodeFormatDec.SetState(ROOT.kButtonDown)
+		self.fAdcCodeRadixFrame.SetButton(0)
+
+		self.fAdcTab.AddFrame(self.fReadAdcButton,     ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 15,  50, 30,  0)) 
+		self.fAdcTab.AddFrame(self.fAdcEocDelayLabel,  ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 10,  10, 33,  0)) 
+		self.fAdcTab.AddFrame(self.fAdcEocDelayEntry,  ROOT.TGLayoutHints(ROOT.kLHintsNoHints,  5,  10, 30,  0))
+		self.fAdcTab.AddFrame(self.fAdcCodeLabel,      ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 35,  10, 33, 10))
+		self.fAdcTab.AddFrame(self.fAdcCodeText,       ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 10,  50, 30, 10))
+		self.fAdcTab.AddFrame(self.fAdcCodeRadixFrame, ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 10,  50, 15, 10))
 
 
-		#self.fAdcCodeFrame.AddFrame(self.fAdcCodeLabel, ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 0, 5, 5))
+		##############################################
+		##   map buttons to callbacks and actions   ##
+		##############################################
 
-		self.fAdcTab.AddFrame(self.fReadAdcButton,    ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 15,  50, 30,  0)) 
-		self.fAdcTab.AddFrame(self.fAdcEocDelayLabel, ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 10,  10, 33,  0)) 
-		self.fAdcTab.AddFrame(self.fAdcEocDelayEntry, ROOT.TGLayoutHints(ROOT.kLHintsNoHints,  5,  10, 30,  0))
-		self.fAdcTab.AddFrame(self.fAdcCodeLabel,     ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 35,  10, 33, 10))
-		self.fAdcTab.AddFrame(self.fAdcCodeText,      ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 10,  50, 30, 10))
+		self.DoReadAdcDispatcher = ROOT.TPyDispatcher(self.DoReadAdc)
+		self.fReadAdcButton.Connect("Clicked()", "TPyDispatcher", self.DoReadAdcDispatcher, "Dispatch()")
+
+		self.DoDisplayAdcCodeDispatcher = ROOT.TPyDispatcher(self.DoDisplayAdcCode)
+		self.fAdcCodeRadixFrame.Connect("Pressed(Int_t)", "TPyDispatcher", self.DoDisplayAdcCodeDispatcher, "Dispatch(Int_t)")
 
 
+	##________________________________________________________________________________
+	def DoReadAdc(self) :
 
+		# if __debug__ :
+		self.fAdcCode = ROOT.gRandom.Integer(4096)
+		#self.fAdcCode = 4095
+
+		## display ADC code according to dec/hex radio button
+		if(self.fAdcCodeFormatDec.IsDown()) :	
+			self.fAdcCodeText.SetText(str(self.fAdcCode))
+
+		elif(self.fAdcCodeFormatHex.IsDown()) :
+			#self.fAdcCodeText.SetText(str(hex(self.fAdcCode)[2:].upper()))   ## [2:] removes the trailing '0x'
+			self.fAdcCodeText.SetText(str(format(self.fAdcCode, '03x')).upper())
+
+		else :
+			print "Something wrong..."
+
+
+	##________________________________________________________________________________
+	def DoDisplayAdcCode(self, id) :
+
+		s = self.fAdcCodeText.GetText()
+
+		if(s != '') :
+			if(id == 0) :
+				n = int(s, 16)
+				self.fAdcCodeText.SetText(str(n))
+
+			elif(id == 1) :
+				self.fAdcCodeText.SetText(str(format(self.fAdcCode, '03x')).upper())
+
+			else :
+				print "Something wrong..."
+		else :
+			pass	
+
+ 

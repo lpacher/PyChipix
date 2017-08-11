@@ -1,6 +1,11 @@
 
 import ROOT
 
+## **NOTA! Potrebbe essere carino aggiungere anche due text entries per monitorare l'IP
+##  della macchina e la porta 10000 da usare per la connessione UDP!
+#
+# socket.gethostbyname(socket.gethostname()) => cross-platform, ritorna l'IP della macchina!
+
 class MenuBar(ROOT.TGHorizontalFrame) :
 
 	##________________________________________________________________________________
