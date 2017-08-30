@@ -1,0 +1,12 @@
+
+ ------------------------------------------------------
+               VLSI Design Laboratory
+    Istituto Nazionale di Fisica Nucleare (INFN)
+         via Giuria 1 10125, Torino, Italy
+ ------------------------------------------------------
+
+PyChipix v0.1  (Aug 2017) Luca Pacher - pacher@to.infn.it 
+
+
+Sources available at:
+https://lpacher.github.com/PyChipix
