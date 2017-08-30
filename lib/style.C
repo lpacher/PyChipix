@@ -3,6 +3,9 @@
 
    gStyle->SetCanvasPreferGL(0) ;
 
+   gStyle->SetTextSize(1000.) ;
+   gStyle->SetTextFont(62) ;
+
    gStyle->SetAxisColor(kWhite, "X") ;
    gStyle->SetAxisColor(kWhite, "Y") ;
 
@@ -32,6 +35,7 @@
 
    gStyle->SetOptStat(0) ;
 
-   printf("Black-style set!\n") ;
+   // **DEBUG
+   //printf("Black-style set!\n") ;
 
 }
