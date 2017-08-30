@@ -9,3 +9,4 @@ pychipix/*.pyo
 pychipix/*/*/.pyc
 pychipix/*/*/.pyo
 
+user/data/*.root
