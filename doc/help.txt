@@ -1,0 +1,6 @@
+
+Command line usage:
+connect()
+disconnect()
+readAdc()
+etc.
