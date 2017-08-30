@@ -1,4 +1,4 @@
 
 @echo off
 
-python pychipix %*
+python -i -O pychipix %*
