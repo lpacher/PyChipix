@@ -16,16 +16,59 @@
 # {Trace}
 #----------------------------------------------------------------------------------------------------
 
-#import sys
 
-import ROOT
+## standard library components
+import os
 
+
+## ROOT components
+try :
+	import ROOT
+
+except ImportError :
+
+	print("\n**ERROR: ROOT components are required to run this application!\n")
+
+	if( os.name == 'nt') :
+		print("           call %ROOTSYS%\bin\thisroot.bat might solve this problem.\n")
+	else :
+		print("           source $ROOTSYS/bin/thisroot.(c)sh might solve this problem.\n")
+
+	raise SystemExit
+
+
+
+## user-defined modules
 from connection import Connection
 from GbPhy import *
+from registers import *
 
-from typedef import *
+#from GUI import GUI 
+import GUI
+from ControlBar   import ControlBar
+from TestCommands import TestCommandsGui
+from PixelScan    import PixelScanGui
 
 
+## keep track of the number if command errors with a ROOT histogram
+global hCommandErrors
+hCommandErrors = ROOT.TH1F("hCommandErrors", "", 2, -0.5, 1.5)
+
+
+##________________________________________________________________________________
+def broadcastiPCRconfiguration(r) :
+
+	## **NOTE: mapped as "Write PCR Defaults" button in TestCommands.vi
+
+	## **TODO
+	pass
+
+
+##________________________________________________________________________________
+def browser() :
+
+	global b
+	b = ROOT.TBrowser()
 
 
 
@@ -68,7 +111,75 @@ def disconnect() :
 	else :
 
 		print "\n**ERROR: Connection to FPGA not available!\n"
-		return -1	
+		return -1
+
+
+##________________________________________________________________________________
+def flushEvents() :
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = commandPacket("flushEvents", 0x0)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
+
+
+##________________________________________________________________________________
+def flushTxDataFifo() :
+
+	## **NOTE: mapped as "Flush TX FIFO" button in TestCommands.vi
+
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = commandPacket("flushTxDataFifo", 0x0)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
+
 
 
 
@@ -80,11 +191,10 @@ def getFirmwareVersion() :
 		## build command string
 		commandString = cpuCommandPacket("getFirmwareVersion")
 
-		## send command string
-		sendCommandStringToFPGA(commandString)	
 
-		## get reply
-		replyString = getReplyStringFromFPGA()
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
 
 		## validate tx/rx packets
 		if(replyString[0:3+1] != commandString[0:3+1]) :
@@ -105,22 +215,68 @@ def getFirmwareVersion() :
 		return -1
 
 
-##________________________________________________________________________________
-def getReplyStringFromFPGA(bufferSize=8192) :
-	return Connection.udpSocket.recvfrom(bufferSize)[0]
 
+
+
+
+##________________________________________________________________________________
+def gui() :
+
+	"""just an alias for less typing"""
+	showBar()
+
+
+
+
+
+
+##________________________________________________________________________________
+def closeBar() :
+
+	## TControlBar inherits from TObject, use Delete()
+	if(GUI.bar != None) :	
+
+		GUI.bar.__del__()
+
+		ROOT.gROOT.Reset("a")
 
 
 ##________________________________________________________________________________
 def man() :
 
+	os.system("more README.md")
+
+	"""
 	f = open("./doc/help.txt")
 
 	lines = f.read().splitlines()
 	f.close()
 
+	count = 0
+
 	for line in lines :
+
 		print line
+		count = count+1
+
+		if(count % 25 == 0) :
+			raw_input()
+	"""
+
+
+##________________________________________________________________________________
+def programSpiSequence(spiSequenceRamStartAddress=0, spiSequence=[0]) :
+
+	## **TODO
+	pass
+
+
+##________________________________________________________________________________
+def programTestPulseSequence(testPulseSequence=[0]) :
+
+	## **TODO
+	pass
+
 
 
 ##________________________________________________________________________________
@@ -133,12 +289,18 @@ def quit() :
 
 	## close the main ROOT TApplication event loop and exit
 	ROOT.gApplication.Terminate(0)
+	ROOT.gROOT.Reset("a")
+
+	#exit()
 	raise SystemExit
 
 
 
 ##________________________________________________________________________________
 def read8b10bErrorCounters() :
+
+	## **TODO
+	#return 8b10ErrorCount
 	pass
 
 
@@ -149,16 +311,16 @@ def readADC(adcEocDelay=99999) :
 
 	if(Connection.isConnected) :
 
+
 		## build command strings
 		commandString  = commandPacket("doSpiOperation", 0x70000) 
 		commandString += commandPacket("waitDelay",      adcEocDelay)
 		commandString += commandPacket("doSpiOperation", 0xF0000)
 
-		## send command string
-		sendCommandStringToFPGA(commandString)
 
-		## get reply
-		replyString = getReplyStringFromFPGA()
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
 
 		## validate tx/rx packets
 		if(replyString[0:20+1] != commandString[0:20+1]) :
@@ -191,7 +353,78 @@ def readADC(adcEocDelay=99999) :
 
 ##________________________________________________________________________________
 def readECCR() :
-	pass
+	"""Read ECCR registers through SPI using normal mode (auto-increment not implemented for ECCR)"""
+
+
+	## **NOTE: auto-increment mode is NOT implemented for ECCR registers!
+
+	if(Connection.isConnected) :
+
+		## create a default ECCR object, then fill with received words
+
+		## **DEBUG
+		#for i in range(2) :
+		#	r.SetRegisterContent(i, int(ROOT.gRandom.Uniform(0, 2**16 -1)))
+
+
+		## write POINTER register, select normal mode and select ECCR_0 => 0000|0_010|xxxx_xxxx_xxx0
+		spiFrame = 0x02000
+		commandString = commandPacket("doSpiOperation", spiFrame)
+
+
+		## write DATA register for readback => 1001|xxxx_xxxx_xxxx_xxxx
+		spiFrame = 0x90000
+		commandString += commandPacket("doSpiOperation", spiFrame)
+
+
+		## write POINTER register, select normal mode and select ECCR_0 => 0000|0_010|xxxx_xxxxi_xxx1
+		spiFrame = 0x02001
+		commandString += commandPacket("doSpiOperation", spiFrame)
+
+
+		## write DATA register for readback => 1001|xxxx_xxxx_xxxx_xxxx
+		spiFrame = 0x90000
+		commandString += commandPacket("doSpiOperation", spiFrame)
+
+
+		## **DEBUG
+		#print commandString
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+		#print commandString.encode("hex")
+		#print replyString.encode("hex")
+
+
+		## validate tx/rx packets
+		for i in range(4) :
+
+			if(replyString[8*i:8*i+5] != commandString[8*i:8*i+5]) :   ## Richard
+
+				print "\n**ERROR: Command error!"
+				return -1
+
+			else :
+
+				## if strings match, readback data are contained in latest 2-characters of even 8-characters strings
+				if( i % 2 == 1) :
+
+					word = int(replyString[8*i+6:8*i+6+2].encode("hex"), 16)
+					r.SetRegisterContent(i/3, word)                                    ## i/3 => 1/3 = 0, 3/3 = 1 OK
+
+
+		## update electrical parameters from register slices
+		r.UpdateParameters()
+
+		print "\n**INFO: ECCR values successfully read from chip!\n"
+		return r
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
 
 
 ##________________________________________________________________________________
@@ -200,7 +433,7 @@ def readGCR(mode="auto") :
 
 	if(Connection.isConnected) :
 
-		## create a default GCR, then fill with received words
+		## create a default GCR object, then fill with received words
 		r = GCR()
 
 
@@ -214,7 +447,7 @@ def readGCR(mode="auto") :
 		########################
 		if(mode == "auto") :
 
-			## write POINTER register only once, select auto-increment and select GCR => 0000|1_001|xxxxxxxxxxxx
+			## write POINTER register only once, select auto-increment and select GCR => 0000|1_001|xxxx_xxxxi_xxxx
 			spiFrame = 0x09000
 			commandString = commandPacket("doSpiOperation", spiFrame)
 
@@ -227,13 +460,10 @@ def readGCR(mode="auto") :
 				commandString += commandPacket("doSpiOperation", spiFrame)
 
 
-			## send command string
-			sendCommandStringToFPGA(commandString)
+			## send/receive packets
+			replyString = GbPhyCommandAndResponse(c, commandString)
 
-
-			## get reply string
-			replyString = getReplyStringFromFPGA()
-
+			## **DEBUG
 			#print commandString.encode("hex")
 			#print replyString.encode("hex")
 
@@ -243,7 +473,8 @@ def readGCR(mode="auto") :
 
 				if(i == 0) :
 				
-					if(replyString[8*i:8*i+5] != commandString[8*i:8*i+5]) :
+					#if(replyString[8*i:8*i+5] != commandString[8*i:8*i+5]) :   ## Richard
+					if(replyString[0:8] != commandString[0:8]) :                ## Luca
 
 						print "\n**ERROR: Command error!"
 						return -1
@@ -294,13 +525,8 @@ def readGCR(mode="auto") :
 				commandString += commandPacket("doSpiOperation", spiFrame)
 
 
-			## send command string
-			sendCommandStringToFPGA(commandString)
-
-
-			## get reply string
-			replyString = getReplyStringFromFPGA()
-
+			## send/receive packets
+			replyString = GbPhyCommandAndResponse(c, commandString)
 
 
 			## validate tx/rx packets
@@ -324,8 +550,13 @@ def readGCR(mode="auto") :
 		return -1
 
 
+##________________________________________________________________________________
+def readGbPhyEventsLost() :
 
+	## **TODO
+	#return GbPhyEventsLostCount
 
+	pass
 
 
 
@@ -334,10 +565,57 @@ def readPCR() :
 	pass
 
 
+##________________________________________________________________________________
+def readSpiReplyRam() :
+
+	## **TODO
+	#return spiReplyRamData
+	pass
+
+
+##________________________________________________________________________________
+def readTxFifo() :
+
+	## **TODO
+	#return [fifoData, eventPackets, eventErrors, excessBytes]
+	pass
+
+
+##________________________________________________________________________________
+def readTxFifoDataCount() :
+
+	## **TODO
+	#return TxFifoDataCount
+	pass
+
+
+##________________________________________________________________________________
+def readTxFifoFullCounter() :
+
+	## **TODO
+	#return TxFifoFullCount
+	pass
+
+
+##________________________________________________________________________________
+def readTxFifoMaxCount() :
+
+	## **TODO
+	#return TxFifoMaxCount
+	pass
+
 
 ##________________________________________________________________________________
 def reset() :
-	resetChip()
+
+	"""alias for resetChip"""
+
+	if(resetChip() == 1) :
+		return 1
+
+	else :
+		return -1
+
 
 
 ##________________________________________________________________________________
@@ -348,11 +626,10 @@ def resetChip() :
 		## build command strings
 		commandString  = commandPacket("resetChip", 0x0) 
 
-		## send command string
-		sendCommandStringToFPGA(commandString)
 
-		## get reply
-		replyString = getReplyStringFromFPGA()
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
 
 		## validate tx/rx packets
 		if(replyString != commandString) :
@@ -363,7 +640,7 @@ def resetChip() :
 		else :
 
 			print "\n**INFO: reset sent to ASIC\n"
-			pass
+			return 1
 
 
 	else :
@@ -374,8 +651,35 @@ def resetChip() :
 
 ##________________________________________________________________________________
 def resetClockCounters() :
-	pass
 
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = commandPacket("resetClockCounters", 0x0)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
 
 
 ##________________________________________________________________________________
@@ -387,11 +691,42 @@ def resetFpgaCounters() :
 		## build command strings
 		commandString  = commandPacket("resetFpgaCounters", 0x0) 
 
-		## send command string
-		sendCommandStringToFPGA(commandString)
 
-		## get reply
-		replyString = getReplyStringFromFPGA()
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			print "\n**INFO: reset sent to FPGA counters\n"
+			pass
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
+
+
+##________________________________________________________________________________
+def resetTestPulseSerializer() :
+
+
+	if(Connection.isConnected) :
+
+		## build command strings
+		commandString  = commandPacket("resetTestPulseSerializer", 0x0) 
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
 
 		## validate tx/rx packets
 		if(replyString != commandString) :
@@ -413,13 +748,50 @@ def resetFpgaCounters() :
 
 
 ##________________________________________________________________________________
-def sendCommandStringToFPGA(commandString) :
-	Connection.udpSocket.sendto(commandString, (c.fRemoteAddress, c.fRemotePort))
+def root() :
+	os.system("root -l")
+
+
+##________________________________________________________________________________
+def runSpiSequence(spiSequenceEndAddress=0) :
+
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = commandPacket("runSpiSequence", clamp(spiSequenceEndAddress, 0, 2**16-1))   ## **NOTE: SPI RAM address is 16-bit, clamp input value
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
+
 
 
 
 ##________________________________________________________________________________
 def sendSpiFrame(spiFrame) :
+
+	## **NOTE: mapped as "Do SPI operation" button in TestCommands.vi
+
 
 	## **NOTE: spiFrame = 4-bit command + 16-bit payload data
 
@@ -430,10 +802,10 @@ def sendSpiFrame(spiFrame) :
 
 		## send command string
 		print "\n**INFO: Sending SPI frame: %s\n" % format(spiFrame, "05x")
-		sendCommandStringToFPGA(commandString)
 
-		## get reply
-		replyString = getReplyStringFromFPGA()
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
 
 		## validate tx/rx packets
 		if(replyString[0:5+1] != commandString[0:5+1]) :
@@ -455,26 +827,401 @@ def sendSpiFrame(spiFrame) :
 		return -1
 
 
-
 ##________________________________________________________________________________
-def sendTestPulse() :
+def sendTestPulseSequence(mode="normal", frameDelay=0, frameInterval=0, numPulses=1, triggerEnable=0, triggerDelay=0) :
+
+	## **NOTE: mapped to "Do TP" button in TestCommands.vi
+
+	## **TODO
+
+	"""
+	if(mode == "autozero") :
+
+
+	elif(mode == "normal") :   ## **NOTE: either "normal" or "sequence" in Richard code
+
+
+	else :
+		print "**ERROR: Unknown mode option"
+	"""
+
 	pass
 
+
+##________________________________________________________________________________
+def setAutozeroingEnable(autozeroingEnable, r) :
+
+	## **TODO
+
+	## **NOTE: this function in Richard's .vi => 1. enables AZ and 2. programs PWM generator according to GCR! Maye redundant?
+
+
+	"""
+	pwmHigh = r.GetParameter(0)
+	pwmLow  = r.GetParameter(1)
+	"""
+
+	pass
+
+
+
+##________________________________________________________________________________
+def setBoardLines(gpio=0, pinswap=0) :
+
+	## **TODO
+	pass
+
+
+
+##________________________________________________________________________________
+def setExtTriggerEnable(extTriggerEnable=0, extTriggerTestPulseEnable=0, extTriggetTestPulseCounterMax=0) :
+
+	## **TODO
+	pass
+
+
+##________________________________________________________________________________
+def setFastOrMode(fastOrModeEnable=0) :
+
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = commandPacket("setFastOrMode", fastOrModeEnable)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
+	pass
+
+
+##________________________________________________________________________________
+def setFrameCounterEventEnable(frameCounterEventEnable=0) :
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = commandPacket("setFrameCounterEventEnable", frameCounterEventEnable)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
+	pass
+
+
+##________________________________________________________________________________
+def setPixelRegionDebugMode(pixelRegionDebugModeEnable=0) :
+
+	"""
+	just send the proper SPI frame:
+	0100|xxxx_xxxx_xxxx_xxxx => enable PR debug mode => 0x40000
+	1100|xxxx_xxxx_xxxx_xxxx => disable PR debug mode => 0xC0000
+
+	"""
+	
+
+	if(pixelRegionDebugModeEnable == 0) :
+
+		#frame = 0xC0000
+		sendSpiFrame(0xC0000)
+
+	else :
+
+		#frame = 0x40000
+		sendSpiFrame(0x40000)
+
+
+##________________________________________________________________________________
+def setScanMode(scanModeEnable=0) :
+
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = commandPacket("setScanMode", scanModeEnable)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
+
+
+##________________________________________________________________________________
+def setSpiRamAddress(address=0, autoIncrement=0) :
+
+	## **TODO
+	pass
+
+
+##________________________________________________________________________________
+def setSpiSerialOffsetEnable(spiSerialOffsetEnable=0) :
+
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = commandPacket("setSpiSerialOffsetEnable", spiSerialOffsetEnable)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
+
+
+##________________________________________________________________________________
+def setTxDataAlignEnable(txDataAlignEnable=0) :
+
+
+	"""
+	just send the proper SPI frame:
+	0011|xxxx_xxxx_xxxx_xxxx => enable 8b/10b synch => 0x30000
+	1011|xxxx_xxxx_xxxx_xxxx => disable 8b/10b synch => 0xB0000
+
+	"""
+
+	if(txDataAlignEnable == 0) :
+
+		#frame = 0xB0000
+		sendSpiFrame(0xB0000)
+
+	else :
+
+		#frame = 0x30000
+		sendSpiFrame(0x30000)
+
+
+##________________________________________________________________________________
+def setTxDataEnable(txDataEnable=0) :
+
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = commandPacket("setTxDataEnable", txDataEnable)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
+
+
+
+##________________________________________________________________________________
+def showBar() :
+
+	if(ROOT.gROOT.IsBatch()) :
+
+		print "\n"
+		print "**WARN: Application started in batch mode, cannot open GUI items !"
+		print "        Use ROOT.gROOT.SetBatch(0) if you really want graphics. \n"
+		pass
+
+	else :
+
+		#global bar
+		#bar = ControlBar()
+		#bar.Show()
+
+		GUI.bar = ControlBar()
+
+
+##________________________________________________________________________________
+def source(fileName="") :
+
+	"""just an alias for less typing"""
+	execfile(fileName)
 
 
 
 ##________________________________________________________________________________
 def synchronizeTx8b10b() :
 
+	## **TODO
 	#return syncOK
 
 	pass
 
 
 ##________________________________________________________________________________
-def writeECCR() :
-	pass
+def waitDelay(delay=0x00000) :
 
+
+	## **NOTE: delay counter inside FPGA is 20-bit, just keep 20 LSBs of delay integer variable
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = commandPacket("waitDelay", delay & 0xFFFFF)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
+
+
+##________________________________________________________________________________
+def writeECCR(r) :
+	"""Write ECCR registers through SPI using normal mode (auto-increment not implemented for ECCR)"""
+
+
+	if(Connection.isConnected) :
+
+
+		commandString = ""
+
+
+		## write POINTER register, select normal mode and select ECCR_0 => 0000|0_010|xxxx_xxxx_xxx0
+		spiFrame = 0x02000
+		commandString += commandPacket("doSpiOperation", spiFrame)
+
+
+		## write DATA register and insert payload data => 0001|16-bit payload
+		spiFrame = 0x10000 | r.GetRegisterContent(0)
+		commandString += commandPacket("doSpiOperation", spiFrame)
+
+
+		## write POINTER register, select normal mode and select ECCR_0 => 0000|0_010|xxxx_xxxxi_xxx1
+		spiFrame = 0x02001
+		commandString += commandPacket("doSpiOperation", spiFrame)
+
+
+		## write DATA register and insert payload data => 0001|16-bit payload
+		spiFrame = 0x10000 | r.GetRegisterContent(1)
+		commandString += commandPacket("doSpiOperation", spiFrame)
+
+
+		## **DEBUG
+		#print commandString
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+			print "\n**INFO: ECCR values successfully written to chip!\n"
+			return 1
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
 
 
 ##________________________________________________________________________________
@@ -503,13 +1250,10 @@ def writeGCR(r, mode="auto") :
 				commandString += commandPacket("doSpiOperation", spiFrame)
 
 
-			## send command string
-			sendCommandStringToFPGA(commandString)
+			## send/receive packets
+			replyString = GbPhyCommandAndResponse(c, commandString)
 
-
-			## get reply string
-			replyString = getReplyStringFromFPGA()
-
+			print "here"
 
 			## validate tx/rx packets
 			if(replyString != commandString) :
@@ -541,13 +1285,8 @@ def writeGCR(r, mode="auto") :
 				commandString += commandPacket("doSpiOperation", spiFrame)
 
 
-			## send command string
-			sendCommandStringToFPGA(commandString)
-
-
-			## get reply string
-			replyString = getReplyStringFromFPGA()
-
+			## send/receive packets
+			replyString = GbPhyCommandAndResponse(c, commandString)
 
 
 			## validate tx/rx packets
@@ -574,7 +1313,43 @@ def writeGCR(r, mode="auto") :
 
 
 ##________________________________________________________________________________
-def writePCR() :
+def writePCR(r) :
+
+	## **TODO
 	pass
 
+
+
+
+##________________________________________________________________________________
+def writeSpiCommandRam(spiCommandRamData=0x00000000) :
+
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = commandPacket("writeSpiCommandRam", spiCommandRamData & 0xFFFFFFFF)   ## **NOTE: ensure 32-bit integer value
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "\n**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "\n**ERROR: Connection to FPGA not available!\n"
+		return -1
 
