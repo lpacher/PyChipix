@@ -249,6 +249,10 @@ class ConnectionFrame(ROOT.TGHorizontalFrame) :
 		tasks.quit()
 
 
+
+
+
+
 	##________________________________________________________________________________
 	def DoPing(self) :
 
@@ -1128,6 +1132,27 @@ class EccrWriteFrame(ROOT.TGHorizontalFrame) :
 
 		return ECCR_DATA
 
+"""
+triggerLatency = int(self.fEccrWriteTriggerLatencyEntry.GetNumber())
+mcdMask = int(self.fEccrWriteMcdMaskEntry.GetNumber())
+
+triggeredOperations     = int(self.fEccrWriteTriggerModeEnable.IsOn())
+totMode                 = int(self.fEccrWriteTotModeEnable.IsOn())
+highDeadtimeMode        = int(self.fEccrWriteHighDeadtimeEnable.IsOn())
+binaryTimestampEncoding = int(self.fEccrWriteBinaryTimestampEnable.IsOn())
+disable8b10bEncoding    = int(self.fEccrWrite8b10bDisable.IsOn())
+
+ECCR_DATA = []
+
+ECCR_DATA.append(triggerLatency)
+ECCR_DATA.append(triggeredOperations)
+ECCR_DATA.append(totMode)
+ECCR_DATA.append(highDeadtimeMode)
+ECCR_DATA.append(binaryTimestampEncoding)
+ECCR_DATA.append(disable8b10bEncoding)
+ECCR_DATA.append(mcdMask)
+"""
+
 
 
 #############################
@@ -1585,3 +1610,152 @@ class PcrWriteDefaultsFrame(ROOT.TGHorizontalFrame) :
 		self.AddFrame(self.fPcrWriteDefaultsFrames[0], ROOT.TGLayoutHints(ROOT.kLHintsExpandY, 20, 10, 10, 0))
 		self.AddFrame(self.fPcrWriteDefaultsFrames[1], ROOT.TGLayoutHints(ROOT.kLHintsExpandY, 20, 10, 10, 0))
 		self.AddFrame(self.fPcrWriteDefaultsFrames[2], ROOT.TGLayoutHints(ROOT.kLHintsExpandY, 20, 10, 10, 0))
+
+
+
+
+
+class TestPulseSequenceParametersFrame(ROOT.TGGroupFrame) :
+
+
+	##________________________________________________________________________________
+	def __init__(self, parent) :
+
+		## create TGHorizontalFrame to contain test-pulse parameters 
+
+		ROOT.TGGroupFrame.__init__(self, parent, " TP sequence parameters ", ROOT.kHorizontalFrame)
+
+		self.fTestPulseSequenceParametersFrames = []
+
+		self.fTestPulseSequenceParametersFrames.append(ROOT.TGVerticalFrame(self, 0, 0, ROOT.kChildFrame))
+		self.fTestPulseSequenceParametersFrames.append(ROOT.TGVerticalFrame(self, 0, 0, ROOT.kChildFrame))
+
+
+		## TP mode and phase
+		self.fTestPulseSequenceModeLabel  = ROOT.TGLabel(self.fTestPulseSequenceParametersFrames[0], "TP mode")
+		self.fTestPulseSequencePhaseLabel = ROOT.TGLabel(self.fTestPulseSequenceParametersFrames[0], "TP phase")
+
+		## TP parameters
+		self.fTestPulseSequenceFrameDelayLabel    = ROOT.TGLabel(self.fTestPulseSequenceParametersFrames[0], "TP frame delay")
+		self.fTestPulseSequenceFrameIntervalLabel = ROOT.TGLabel(self.fTestPulseSequenceParametersFrames[0], "TP frame interval")
+		self.fTestPulseSequenceNumPulsesLabel     = ROOT.TGLabel(self.fTestPulseSequenceParametersFrames[0], "TP num. pulses")
+
+		## trigger parameters
+		self.fTestPulseSequenceTriggerEnable = ROOT.TGCheckButton(self.fTestPulseSequenceParametersFrames[0], "Trigger enable") 
+		self.fTestPulseSequenceTriggerDelayLabel = ROOT.TGLabel(self.fTestPulseSequenceParametersFrames[0], "Trigger delay")
+
+
+		self.fTestPulseSequenceParametersFrames[0].AddFrame(self.fTestPulseSequenceModeLabel,          ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5,  8, 0))
+		self.fTestPulseSequenceParametersFrames[0].AddFrame(self.fTestPulseSequencePhaseLabel,         ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5, 16, 0))
+		self.fTestPulseSequenceParametersFrames[0].AddFrame(self.fTestPulseSequenceFrameDelayLabel,    ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5, 16, 0))
+		self.fTestPulseSequenceParametersFrames[0].AddFrame(self.fTestPulseSequenceFrameIntervalLabel, ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5, 16, 0))
+		self.fTestPulseSequenceParametersFrames[0].AddFrame(self.fTestPulseSequenceNumPulsesLabel,     ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5, 16, 0))
+		self.fTestPulseSequenceParametersFrames[0].AddFrame(self.fTestPulseSequenceTriggerEnable,      ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5, 16, 0))
+		self.fTestPulseSequenceParametersFrames[0].AddFrame(self.fTestPulseSequenceTriggerDelayLabel,  ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5, 16, 0))
+
+
+		self.fTestPulseSequenceModeBox = ROOT.TGComboBox(self.fTestPulseSequenceParametersFrames[1], -1, ROOT.kHorizontalFrame)
+
+		self.fTestPulseSequenceModeBox.AddEntry("Normal",   0)
+		self.fTestPulseSequenceModeBox.AddEntry("Sequence", 1)
+		self.fTestPulseSequenceModeBox.AddEntry("Autozero", 2)
+
+		self.fTestPulseSequenceModeBox.Resize(106,20)
+		self.fTestPulseSequenceModeBox.Select(0)
+
+
+		self.fTestPulseSequencePhaseEntry = ROOT.TGNumberEntry(
+			self.fTestPulseSequenceParametersFrames[1], 0, 12, -1,
+			ROOT.TGNumberFormat.kNESInteger,
+			ROOT.TGNumberFormat.kNEANonNegative,
+			ROOT.TGNumberFormat.kNELLimitMinMax, 0, (2**16 -1))
+
+
+		self.fTestPulseSequenceFrameDelayEntry = ROOT.TGNumberEntry(
+			self.fTestPulseSequenceParametersFrames[1], 0, 12, -1,
+			ROOT.TGNumberFormat.kNESInteger,
+			ROOT.TGNumberFormat.kNEANonNegative,
+			ROOT.TGNumberFormat.kNELLimitMinMax, 0, (2**16 -1))
+
+
+		self.fTestPulseSequenceFrameIntervalEntry = ROOT.TGNumberEntry(
+			self.fTestPulseSequenceParametersFrames[1], 0, 12, -1,
+			ROOT.TGNumberFormat.kNESInteger,
+			ROOT.TGNumberFormat.kNEANonNegative,
+			ROOT.TGNumberFormat.kNELLimitMinMax, 0, (2**16 -1))
+
+
+		self.fTestPulseSequenceNumPulsesEntry = ROOT.TGNumberEntry(
+			self.fTestPulseSequenceParametersFrames[1], 1, 12, -1,
+			ROOT.TGNumberFormat.kNESInteger,
+			ROOT.TGNumberFormat.kNEANonNegative,
+			ROOT.TGNumberFormat.kNELLimitMinMax, 0, (2**16 -1))
+
+
+		self.fTestPulseSequenceTriggerDelayEntry = ROOT.TGNumberEntry(
+			self.fTestPulseSequenceParametersFrames[1], 0, 12, -1,
+			ROOT.TGNumberFormat.kNESInteger,
+			ROOT.TGNumberFormat.kNEANonNegative,
+			ROOT.TGNumberFormat.kNELLimitMinMax, 0, (2**16 -1))
+
+
+
+
+		self.fTestPulseSequenceParametersFrames[1].AddFrame(self.fTestPulseSequenceModeBox,            ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5,  5, 5))
+		self.fTestPulseSequenceParametersFrames[1].AddFrame(self.fTestPulseSequencePhaseEntry,         ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5,  5, 5))
+		self.fTestPulseSequenceParametersFrames[1].AddFrame(self.fTestPulseSequenceFrameDelayEntry,    ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5,  5, 5))
+		self.fTestPulseSequenceParametersFrames[1].AddFrame(self.fTestPulseSequenceFrameIntervalEntry, ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5,  5, 5))
+		self.fTestPulseSequenceParametersFrames[1].AddFrame(self.fTestPulseSequenceNumPulsesEntry,     ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5,  5, 5))
+		self.fTestPulseSequenceParametersFrames[1].AddFrame(self.fTestPulseSequenceTriggerDelayEntry,  ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5, 40, 5))
+
+
+		self.AddFrame(self.fTestPulseSequenceParametersFrames[0], ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5,  20, 0))
+		self.AddFrame(self.fTestPulseSequenceParametersFrames[1], ROOT.TGLayoutHints(ROOT.kLHintsNoHints, 5, 5,  20, 0))
+
+
+
+	##________________________________________________________________________________
+	def GetTestPulseMode(self) :
+
+		#testPulseMode = 
+
+		#return testPulseMode
+		pass
+
+
+	##________________________________________________________________________________
+	def GetTestPulseiSequencePhase(self) :
+		
+		return int(self.fTestPulseSequencePhaseEntry.GetNumber()) 
+
+
+	##________________________________________________________________________________
+	def GetTestPulseiSequenceFrameDelay(self) :
+
+		return int(self.fTestPulseSequenceFrameDelayEntry.GetNumber())
+
+
+	##________________________________________________________________________________
+	def GetTestPulseSequenceFrameInterval(self) :
+
+		return int(self.fTestPulseSequenceFrameIntervalEntry.GetNumber())
+
+
+	##________________________________________________________________________________
+	def GetTestPulseSequenceNumPulses(self) :
+
+		return int(self.fTestPulseSequenceNumPulsesEntry.GetNumber())
+
+
+	##________________________________________________________________________________
+	def GetTestPulseSequenceTriggerEnable(self) :
+
+		return int(self.fTestPulseSequenceTriggerEnable.IsOn())
+
+	##________________________________________________________________________________
+	def GetTestPulseSequenceTriggerDelay(self) :
+
+		return int(self.fTestPulseSequenceTriggerDelayEntry.GetNumber())
+
+
+
