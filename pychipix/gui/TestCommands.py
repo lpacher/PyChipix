@@ -27,9 +27,11 @@ from CommonFrames import GcrReadFrame, GcrWriteFrame
 from CommonFrames import EccrReadFrame, EccrWriteFrame
 from CommonFrames import PcrReadFrame, PcrWriteFrame, PcrWriteDefaultsFrame 
 
+from CommonFrames import TestPulseSequenceParametersFrame
+
 import tasks
 
-from typedef import *
+from registers import *
 
 
 ###########################
@@ -328,6 +330,70 @@ class SpiTab(ROOT.TGCompositeFrame) :
 		parent.AddFrame(self.fSpiTabVerticalFrames[1], ROOT.TGLayoutHints(ROOT.kLHintsExpandY, 30, 10, 10, 10))
 		parent.AddFrame(self.fSpiTabVerticalFrames[2], ROOT.TGLayoutHints(ROOT.kLHintsExpandY, 10, 10, 10, 10))
 		parent.AddFrame(self.fSpiTabVerticalFrames[3], ROOT.TGLayoutHints(ROOT.kLHintsExpandY, 10, 10, 10, 10))
+
+
+
+#########################
+##   TP-tab subclass   ##
+#########################
+
+"""
+Class Reference:
+
+TestPulseTab(parent) - constructor
+"""
+
+
+class TestPulseTab(ROOT.TGCompositeFrame) :
+
+	##________________________________________________________________________________
+	def __init__(self, parent) :
+
+		parent.ChangeOptions(ROOT.kHorizontalFrame)
+
+
+		self.fTestPulseTabVerticalFrames = [] 
+
+		self.fTestPulseTabVerticalFrames.append(ROOT.TGVerticalFrame(parent, 0, 0, ROOT.kChildFrame))
+		self.fTestPulseTabVerticalFrames.append(ROOT.TGVerticalFrame(parent, 0, 0, ROOT.kChildFrame))
+
+		self.fResetTestPulseSerializerButton = ROOT.TGTextButton(self.fTestPulseTabVerticalFrames[0], "Reset TP serializer")     ;   self.fResetTestPulseSerializerButton.SetMargins(10, 10, 1, 1)
+		self.fProgramTestPulseSequenceButton = ROOT.TGTextButton(self.fTestPulseTabVerticalFrames[0], "Program TP sequence")     ;   self.fProgramTestPulseSequenceButton.SetMargins(10, 10, 1, 1)
+		self.fSendTestPulseSequenceButton    = ROOT.TGTextButton(self.fTestPulseTabVerticalFrames[0], "Send TP sequence")        ;   self.fSendTestPulseSequenceButton.SetMargins(10, 10, 1, 1)
+		self.fSetExternalTriggerEnableButton = ROOT.TGTextButton(self.fTestPulseTabVerticalFrames[0], "Enable external trigger") ;   self.fSetExternalTriggerEnableButton.SetMargins(10, 10, 1, 1)	
+
+
+		self.fTestPulseTabVerticalFrames[0].AddFrame(self.fResetTestPulseSerializerButton, ROOT.TGLayoutHints(ROOT.kLHintsExpandX, 5, 5,  20, 0))
+		self.fTestPulseTabVerticalFrames[0].AddFrame(self.fProgramTestPulseSequenceButton, ROOT.TGLayoutHints(ROOT.kLHintsExpandX, 5, 5,  20, 0))
+		self.fTestPulseTabVerticalFrames[0].AddFrame(self.fSendTestPulseSequenceButton,    ROOT.TGLayoutHints(ROOT.kLHintsExpandX, 5, 5,  20, 0))
+		self.fTestPulseTabVerticalFrames[0].AddFrame(self.fSetExternalTriggerEnableButton, ROOT.TGLayoutHints(ROOT.kLHintsExpandX, 5, 5,  20, 0))
+
+		#self.fTestPulseSequenceFrame =
+		self.fTestPulseParametersFrame = TestPulseSequenceParametersFrame(self.fTestPulseTabVerticalFrames[1])
+
+
+		self.fTestPulseTabVerticalFrames[1].AddFrame(self.fTestPulseParametersFrame, ROOT.TGLayoutHints(ROOT.kLHintsExpandX, 5, 5,  20, 0))
+
+
+		parent.AddFrame(self.fTestPulseTabVerticalFrames[0], ROOT.TGLayoutHints(ROOT.kLHintsExpandY, 10, 10, 10, 10))
+		parent.AddFrame(self.fTestPulseTabVerticalFrames[1], ROOT.TGLayoutHints(ROOT.kLHintsExpandY, 30, 10, 10, 10))
+
+
+
+
+##############################
+##   TX FIFO-tab subclass   ##
+##############################
+
+
+
+class TxFifoTab(ROOT.TGCompositeFrame) :
+
+	##________________________________________________________________________________
+	def __init__(self, parent) :
+
+		parent.ChangeOptions(ROOT.kVerticalFrame)
+
 
 
 
@@ -713,17 +779,29 @@ class TestCommandsGui( ROOT.TGMainFrame ) :
 
 	"""TestCommandsGui class. Used to debug all basic operations."""
 
+
+
 	##________________________________________________________________________________
 	def __init__( self, w=1600, h=950) :
 
 		"""constructor"""
+
+
+		## **DEBUG
+		print "\n**INFO: Starting TestCommands GUI...\n"
+
+
+		## load GUI style
+		ROOT.gApplication.ExecuteFile("./lib/style.cxx")
+		#ROOT.gROOT.ProcessLine("./lib/style.cxx")
+
 
 		## window size
 		self.fWidth  = w
 		self.fHeight = h
 
 		## create a TGMainFrame top-level window
-		ROOT.TGMainFrame.__init__( self, ROOT.gClient.GetRoot(), self.fWidth, self.fHeight, ROOT.kMainFrame|ROOT.kVerticalFrame)
+		ROOT.TGMainFrame.__init__(self, ROOT.gClient.GetRoot(), self.fWidth, self.fHeight, ROOT.kMainFrame|ROOT.kVerticalFrame)
 
 		## turn on automatic cleanup in this frame and and all child frames (hierarchical)
 		self.SetCleanup(ROOT.kDeepCleanup)
@@ -738,9 +816,6 @@ class TestCommandsGui( ROOT.TGMainFrame ) :
 		#self.SetWMState(ROOT.kIconicState)
 		self.SetWMState(ROOT.kNormalState)
 
-		## connect the 'X' window button to exit
-		self.ExitDispatcher = ROOT.TPyDispatcher( self.ExitCallback )
-		self.Connect( "CloseWindow()", "TPyDispatcher", self.ExitDispatcher, "Dispatch()" )
 
 		#########################
 		##   internal frames   ##
@@ -754,14 +829,14 @@ class TestCommandsGui( ROOT.TGMainFrame ) :
 		self.fTabsFrame = ROOT.TGTab(self)
 		self.fTabsFrame.DrawBorder()
 
-		self.fFpgaTab = FpgaTab (self.fTabsFrame.AddTab("   FPGA   "))
-		self.fSpiTab  = SpiTab  (self.fTabsFrame.AddTab("   SPI    "))
-		self.fTPTab   =          self.fTabsFrame.AddTab("   TP     ") ;  #TODO
-		self.fGcrTab  = GcrTab  (self.fTabsFrame.AddTab("   GCR    "))
-		self.fEccrTab = EccrTab (self.fTabsFrame.AddTab("   ECCR   "))
-		self.fPcrTab  = PcrTab  (self.fTabsFrame.AddTab("   PCR    "))
-		self.fAdcTab  = AdcTab  (self.fTabsFrame.AddTab("   ADC    "))
-		self.fPcbTab  =          self.fTabsFrame.AddTab("   PCB    ") ;  #TODO
+		self.fFpgaTab = FpgaTab      (self.fTabsFrame.AddTab("   FPGA   "))
+		self.fSpiTab  = SpiTab       (self.fTabsFrame.AddTab("   SPI    "))
+		self.fTPTab   = TestPulseTab (self.fTabsFrame.AddTab("   TP     "))
+		self.fGcrTab  = GcrTab       (self.fTabsFrame.AddTab("   GCR    "))
+		self.fEccrTab = EccrTab      (self.fTabsFrame.AddTab("   ECCR   "))
+		self.fPcrTab  = PcrTab       (self.fTabsFrame.AddTab("   PCR    "))
+		self.fAdcTab  = AdcTab       (self.fTabsFrame.AddTab("   ADC    "))
+		self.fPcbTab  =               self.fTabsFrame.AddTab("   PCB    ") ;  #TODO
 
 
 		#########################################
@@ -788,16 +863,30 @@ class TestCommandsGui( ROOT.TGMainFrame ) :
 		#self.SetWMSizeHints(self.fWidth, self.fHeight, self.fWidth, self.fHeight, 1, 1)
 
 
+		###################
+		##   callbacks   ##
+		###################
+
+		## connect the 'X' window button to exit
+		self.CloseWindowDispatcher = ROOT.TPyDispatcher(self.MyCloseWindow)
+		self.Connect( "CloseWindow()", "TPyDispatcher", self.CloseWindowDispatcher, "Dispatch()" )
+
+
+
 	##________________________________________________________________________________
 	def __del__( self ) :
 		"""destructor"""
 		self.Cleanup()
 		self.DeleteWindow()
+		#ROOT.gStyle.SetStyle("Default")
+		#ROOT.gROOT.Reset()
+
 
 
 	##________________________________________________________________________________
-	def ExitCallback( self ) :
-		ROOT.gApplication.Terminate(0)
-		raise SystemExit
+	def MyCloseWindow( self ) :
 
+		self.CloseWindow()
 
+		ROOT.gROOT.SetStyle("Plain")
+		ROOT.gROOT.Reset()
