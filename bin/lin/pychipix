@@ -1,3 +1,21 @@
-#!/bin/sh
+#!/bin/bash
 
-python -i -O pychipix $@
+## parse here the command line help
+if [[ ( $1 == "--help") || $1 == "-h" ]]
+then
+
+   echo "                                                             "
+   echo "Command line usage:                                          "
+   echo "                                                             "
+   echo "pychipix [[--batch|--gui] | [script.py]]                     "
+   echo "                                                             "
+   echo "Options:                                                     "
+   echo "                                                             "
+   echo " --batch : run in batch mode without graphics                "
+   echo " --gui   : start interactive session and open the TControlBar"
+   echo "                                                             "
+
+   exit 0
+else
+   python -i -O pychipix $@
+fi
