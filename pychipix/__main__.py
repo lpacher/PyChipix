@@ -46,21 +46,20 @@ except ImportError :
 	raise SystemExit
 
 
-## application components
-from TestCommands import TestCommandsGui
-from PixelScan    import PixelScanGui
+## GUI application components
+from GUI import GUI
+from tasks import showBar
+
 
 ##________________________________________________________________________________
-def ShowHelp() :
+def printCommandLineHelp() :
 
 	print "\nCommand-line usage:\n"
-	print "% pychipix TestCommands"
-	print "% pychipix PixelScan"
-	print "% pychipix batch"
+	print "pychipix [--batchi | --gui | --info] [/path/to/script]\n"
 
 
 ##________________________________________________________________________________
-def Credits() :
+def printCredits() :
 
 	f = open("./doc/credits.txt")
 
@@ -76,51 +75,55 @@ def main() :
 
 	"""main application entry point"""
 
-	Credits()
-	a = ROOT.gApplication
-	a.ExecuteFile("./lib/style.cxx")
-	#ROOT.gROOT.ProcessLine("./lib/style.cxx")
-
-	#try :
-
-	if( sys.argv[1] == "TestCommands" ) :
-
-		print "Starting TestCommands GUI..."
-
-		w = TestCommandsGui()
-		print w.__doc__
-
-		## start the main event-looper
-		a.Run()
-
-	elif( sys.argv[1] == "PixelScan" ) :
-
-		print "Starting PixelScan GUI..."
-		w = PixelScanGui()
-		print w.__doc__
-
-		## start the main event-looper
-		a.Run()
+	## show credits
+	printCredits()
 
 
-	elif( sys.argv[1] == "batch") :
+	## print hints
+	print "Type man() for command-line help"
+	print "Type root() to open a ROOT/CINT session"
 
-		## batch mode selected, change the prompt and pass
-		print "Type man() for command-line help"
-		sys.ps1 = "pychipix/> "
-		#sys.ps1 = "pydaq/> "
 
-		if( len(sys.argv) == 3) :
-			execfile(str(sys.argv[2]))
+	## set command prompt
+	sys.ps1 = "pychipix/> "
 
+
+	## parse command-line arguments
+	if(len(sys.argv) > 1) :
+
+		if(sys.argv[1] == "--gui") :
+	
+			## launch the control bar
+			showBar()
+
+
+			## a script is passed for execution
+			if( len(sys.argv) == 3) :
+				execfile(str(sys.argv[2]))
+
+
+		## batch-mode selected, GUI will be not available
+		elif( sys.argv[1] == "--batch") :
+
+			ROOT.gROOT.SetBatch(ROOT.kTRUE)
+
+
+			## a script is passed for execution
+			if( len(sys.argv) == 3) :
+				execfile(str(sys.argv[2]))
+
+
+		## a script is passed as a unique argument
+		else :
+			execfile(str(sys.argv[1]))
+
+
+
+	## default mode with both GUI and command-line available
+	else :
 		pass
 
-	else :
-		print "Unknown option"
 
-	#except :
-	#	ShowHelp()
-	#	raise SystemExit
 
 ##________________________________________________________________________________
 if __name__ == "__main__" :
