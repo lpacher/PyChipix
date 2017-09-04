@@ -33,6 +33,15 @@ class PixelScanGui(ROOT.TGMainFrame, Connection) :
 
 		"""constructor"""
 
+		## **DEBUG
+		print "Starting PixelScan GUI..."
+
+
+		## load GUI style
+		ROOT.gApplication.ExecuteFile("./lib/style.cxx")
+		#ROOT.gROOT.ProcessLine("./lib/style.cxx")
+
+
 		## window size
 		self.fWidth  = w
 		self.fHeight = h
@@ -198,6 +207,8 @@ class PixelScanGui(ROOT.TGMainFrame, Connection) :
 		## connect the 'X' window button to exit
 		self.DoExitDispatcher = ROOT.TPyDispatcher( self.DoExitCallback )
 
+		self.CloseWindowDispatcher = ROOT.TPyDispatcher(self.MyCloseWindow)
+
 
 
 		#########################################################
@@ -205,7 +216,7 @@ class PixelScanGui(ROOT.TGMainFrame, Connection) :
 		#########################################################
 
 		## exit/quit
-		self.Connect            ("CloseWindow()", "TPyDispatcher", self.DoExitDispatcher, "Dispatch()")
+		self.Connect            ("CloseWindow()", "TPyDispatcher", self.CloseWindowDispatcher, "Dispatch()")
 		#self.exitButton.Connect ("Clicked()",     "TPyDispatcher", self.DoExitDispatcher, "Dispatch()")
 
 
@@ -221,6 +232,18 @@ class PixelScanGui(ROOT.TGMainFrame, Connection) :
 		"""destructor"""
 		self.Cleanup()
 		self.DeleteWindow()
+
+
+
+
+	##________________________________________________________________________________
+	def MyCloseWindow( self ) :
+
+		self.CloseWindow()
+
+		ROOT.gROOT.SetStyle("Plain")
+		ROOT.gROOT.Reset()
+
 
 	##________________________________________________________________________________
 	def popup(self) :
@@ -265,7 +288,9 @@ class PixelScanGui(ROOT.TGMainFrame, Connection) :
 
 	##________________________________________________________________________________
 	def buildSettingsTab(self) :
-		print "Test passed"
+			pass
+			#print "Test passed"
+
 
 	##________________________________________________________________________________
 	def buildMeasurementTab(self) :
@@ -282,5 +307,4 @@ class PixelScanGui(ROOT.TGMainFrame, Connection) :
 
 	##________________________________________________________________________________
 	def buildPixelMapTab(self) :
-		print "Test passed 3"
-
+		pass
