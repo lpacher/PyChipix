@@ -19,29 +19,14 @@
 
 import binascii
 
+from connection import Connection
 
-##________________________________________________________________________________
-def clamp(N, Nmin, Nmax) :
-	"""for a given integer, returns either the number or its min/max permitted values"""
-	return max(min(Nmax, N), Nmin)
-
-
-##________________________________________________________________________________
-def ror(x, y) :
-	"""bitwise right-rotation, 16-bit max. data width"""
-	mask = (2**y) -1
-	mask_bits = x & mask
-	return (x >> y) | (mask_bits << (16-y))
+## custom components
+from utils import *
 
 
 ##________________________________________________________________________________
-def rol(x, y) :
-	"""bitwise left-rotation, 16-bit max. data width"""
-	return ror(x, 16-y)
-
-
-##________________________________________________________________________________
-def phyCommandPacket(phyCommandTarget="", commandCode=0x00, commandData=0x00000000) :
+def GbPhyCommandPacket(phyCommandTarget="", commandCode=0x00, commandData=0x00000000) :
 	"""Python implementation of GbPhy_CommandPacket.vi"""
 
 	phyCmdHex = 0x00
@@ -89,7 +74,7 @@ def cpuCommandPacket(cpuCommand="", cpuData=0x00000000) :
 	else :
 		pass
 
-	return phyCommandPacket("cpu", cpuCmdHex, cpuData)
+	return GbPhyCommandPacket("cpu", cpuCmdHex, cpuData)
 
 
 ##________________________________________________________________________________
@@ -123,7 +108,7 @@ def commandPacket(command="", data=0x00000000) :
 	elif(command == "setFastOrMode") :
 		cmdHex = 0x0016
 
-	elif(command == "resetTpSerializer") :
+	elif(command == "resetTestPulseSerializer") :
 		cmdHex = 0x0020
 
 	elif(command == "setTpSequenceAddressMax") :
@@ -150,7 +135,7 @@ def commandPacket(command="", data=0x00000000) :
 	elif(command == "doAutozeroingTp") :
 		cmdHex = 0x0028
 
-	elif(command == "resetClkCounters") :
+	elif(command == "resetClockCounters") :
 		cmdHex = 0x0080
 
 	elif(command == "setBoardLines") :
@@ -198,7 +183,7 @@ def commandPacket(command="", data=0x00000000) :
 	elif(command == "readSpiReplyRam") :
 		cmdHex = 0x00A4
 
-	elif(command == "setSpiSerialOffset") :
+	elif(command == "setSpiSerialOffsetEnable") :
 		cmdHex = 0x00A5
 
 	elif(command == "setTpSequenceRamAddress") :
@@ -252,4 +237,37 @@ def commandPacket(command="", data=0x00000000) :
 	return cpuCommandPacket("fifoCommand", p)
 
 
+
+##________________________________________________________________________________i
+def GbPhyCommandAndResponse(c, commandString="") :
+
+		## **DEBUG
+		#print commandString.encode("hex")
+
+		## **TODO, only a dummy implementation (errors not handled)
+
+		## send command string
+		sendCommandStringToFPGA(c, commandString)	
+
+		## get reply
+		replyString = getReplyStringFromFPGA()
+
+
+		return replyString
+
+
+
+##________________________________________________________________________________
+def sendCommandStringToFPGA(c, commandString) :
+
+	## **DEBUG
+	#print c.GetRemoteAddress()
+	#print c.GetRemotePort()
+	
+	Connection.udpSocket.sendto(commandString, (c.GetRemoteAddress(), c.GetRemotePort()))
+
+##________________________________________________________________________________
+def getReplyStringFromFPGA(bufferSize=8192) :
+
+	return Connection.udpSocket.recvfrom(bufferSize)[0]
 
