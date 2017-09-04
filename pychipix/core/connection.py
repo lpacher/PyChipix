@@ -119,6 +119,46 @@ class Connection(object) :
 		print "\n**INFO: Connection closed!\n"
 
 
+
+	##________________________________________________________________________________
+	def GetBoardNumber(self) :
+
+		return self.fBoardNumber
+
+
+
+	##________________________________________________________________________________
+	def GetLocalAddress(self) :
+
+		return self.fLocalAddress
+
+
+	##________________________________________________________________________________
+	def GetRemoteAddress(self) :
+
+		return self.fRemoteAddress
+
+
+	##________________________________________________________________________________
+	def GetRemoteEventHeader(self) :
+
+		return self.fRemoteEventHeader
+
+
+
+	##________________________________________________________________________________
+	def GetRemoteEventPort(self) :
+
+		return self.fRemoteEventPort
+
+
+	##________________________________________________________________________________
+	def GetRemotePort(self) :
+
+		return self.fRemotePort
+
+
+
 	##________________________________________________________________________________
 	def Open(self) :
 
