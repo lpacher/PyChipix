@@ -27,12 +27,12 @@ try :
 
 except ImportError :
 
-	print("\n**ERROR: ROOT components are required to run this application!\n")
+	print("**ERROR: ROOT components are required to run this application!")
 
 	if( os.name == 'nt') :
-		print("           call %ROOTSYS%\bin\thisroot.bat might solve this problem.\n")
+		print("           call %ROOTSYS%\bin\thisroot.bat might solve this problem.")
 	else :
-		print("           source $ROOTSYS/bin/thisroot.(c)sh might solve this problem.\n")
+		print("           source $ROOTSYS/bin/thisroot.(c)sh might solve this problem.")
 
 	raise SystemExit
 
@@ -89,12 +89,12 @@ def connect(hostIpAddress="192.168.1.1", boardNumber=0, timeoutMilliSeconds=1000
 	firmwareVersion = getFirmwareVersion()
 
 	if(firmwareVersion != -1) :
-		print "\n**INFO: Connection to FPGA successfully established!\n"
+		print "**INFO: Connection to FPGA successfully established!"
 		Connection.isConnected = True
 		return [1, firmwareVersion]
 
 	else :
-		print "\n**ERROR: Cannot connect to target FPGA!\n"
+		print "**ERROR: Cannot connect to target FPGA!"
 		Connection.isConnected = False
 		return [0, "-1"]
 
@@ -110,7 +110,7 @@ def disconnect() :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -131,7 +131,7 @@ def flushEvents() :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -142,7 +142,7 @@ def flushEvents() :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -166,7 +166,7 @@ def flushTxDataFifo() :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -177,7 +177,7 @@ def flushTxDataFifo() :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -199,19 +199,19 @@ def getFirmwareVersion() :
 		## validate tx/rx packets
 		if(replyString[0:3+1] != commandString[0:3+1]) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 
 		else :
 
 			## packets match, get firmware version from latest 2 characters out of 8
 			firmwareVersion = "0x" + replyString[6:].encode("hex").upper()
 
-			print "\n**INFO: FPGA firmware version is %s\n" % firmwareVersion
+			print "**INFO: FPGA firmware version is %s" % firmwareVersion
 			return firmwareVersion
 
 	except :
 
-		print "\n**ERROR: Cannot get firmware version from FPGA!\n"
+		print "**ERROR: Cannot get firmware version from FPGA!"
 		return -1
 
 
@@ -306,6 +306,46 @@ def read8b10bErrorCounters() :
 
 
 ##________________________________________________________________________________
+def readExtADC() :
+
+
+	if(Connection.isConnected) :
+
+
+		## build command strings
+		commandString  = commandPacket("readPcbAdc", 0x00000) 
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString[0:4+1] != commandString[0:4+1]) :
+
+			print "**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, get ADC code from last 2 characters out of 8
+			extAdcCode = int(replyString[6:].encode("hex"), 16)
+
+			## ADC code validation (TBC)
+			if(extAdcCode == 0xFFFF) :
+
+				print "**WARN: invalid ADC code 0xFFFF from SPI"
+
+			return extAdcCode 
+
+	else :
+
+		print "**ERROR: Connection to FPGA not available!"
+		return -1
+
+
+
+##________________________________________________________________________________
 def readADC(adcEocDelay=99999) :
 
 
@@ -325,7 +365,7 @@ def readADC(adcEocDelay=99999) :
 		## validate tx/rx packets
 		if(replyString[0:20+1] != commandString[0:20+1]) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -336,15 +376,14 @@ def readADC(adcEocDelay=99999) :
 			## ADC code validation
 			if(adcCode == 0xFFFF) :
 
-				print "\n**WARN: invalid ADC code 0xFFFF from SPI\n"
+				print "**WARN: invalid ADC code 0xFFFF from SPI"
 
 			return adcCode 
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
-
 
 
 
@@ -403,7 +442,7 @@ def readECCR() :
 
 			if(replyString[8*i:8*i+5] != commandString[8*i:8*i+5]) :   ## Richard
 
-				print "\n**ERROR: Command error!"
+				print "**ERROR: Command error!"
 				return -1
 
 			else :
@@ -418,12 +457,12 @@ def readECCR() :
 		## update electrical parameters from register slices
 		r.UpdateParameters()
 
-		print "\n**INFO: ECCR values successfully read from chip!\n"
+		print "**INFO: ECCR values successfully read from chip!"
 		return r
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -476,7 +515,7 @@ def readGCR(mode="auto") :
 					#if(replyString[8*i:8*i+5] != commandString[8*i:8*i+5]) :   ## Richard
 					if(replyString[0:8] != commandString[0:8]) :                ## Luca
 
-						print "\n**ERROR: Command error!"
+						print "**ERROR: Command error!"
 						return -1
 
 					else :
@@ -486,7 +525,7 @@ def readGCR(mode="auto") :
 
 					if(replyString[8*i:8*i+5] != commandString[8*i:8*i+5]) :
 
-						print "\n**ERROR: Command error!"
+						print "**ERROR: Command error!"
 						return -1
 
 					else :
@@ -502,7 +541,7 @@ def readGCR(mode="auto") :
 			## update electrical parameters from register slices
 			r.UpdateParameters()
 
-			print "\n**INFO: GCR values successfully read from chip!\n"
+			print "**INFO: GCR values successfully read from chip!"
 			return r
 
 
@@ -532,7 +571,7 @@ def readGCR(mode="auto") :
 			## validate tx/rx packets
 			if(replyString != commandString) :
 
-				print "\n**ERROR: Command error!"
+				print "**ERROR: Command error!"
 				return -1
 
 			else :
@@ -546,7 +585,7 @@ def readGCR(mode="auto") :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -634,18 +673,18 @@ def resetChip() :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
 
-			print "\n**INFO: reset sent to ASIC\n"
+			print "**INFO: reset sent to ASIC"
 			return 1
 
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -667,7 +706,7 @@ def resetClockCounters() :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -678,7 +717,7 @@ def resetClockCounters() :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -699,18 +738,18 @@ def resetFpgaCounters() :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
 
-			print "\n**INFO: reset sent to FPGA counters\n"
+			print "**INFO: reset sent to FPGA counters"
 			pass
 
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -731,18 +770,18 @@ def resetTestPulseSerializer() :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
 
-			print "\n**INFO: reset sent to FPGA counters\n"
+			print "**INFO: reset sent to FPGA counters"
 			pass
 
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -770,7 +809,7 @@ def runSpiSequence(spiSequenceEndAddress=0) :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -781,7 +820,7 @@ def runSpiSequence(spiSequenceEndAddress=0) :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -801,7 +840,7 @@ def sendSpiFrame(spiFrame) :
 		commandString  = commandPacket("doSpiOperation", spiFrame) 
 
 		## send command string
-		print "\n**INFO: Sending SPI frame: %s\n" % format(spiFrame, "05x")
+		print "**INFO: Sending SPI frame: %s" % format(spiFrame, "05x")
 
 		## send/receive packets
 		replyString = GbPhyCommandAndResponse(c, commandString)
@@ -810,7 +849,7 @@ def sendSpiFrame(spiFrame) :
 		## validate tx/rx packets
 		if(replyString[0:5+1] != commandString[0:5+1]) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -818,12 +857,12 @@ def sendSpiFrame(spiFrame) :
 			## packets match, get SPI reply frame from latest 4 characters keeping only 20 LSBs
 			spiReplyFrame = int(replyString[4:].encode("hex"), 16) & 0x0FFFFF
 
-			print "\n**INFO: Received SPI reply frame: %s\n" % format(spiReplyFrame, "05x")
+			print "**INFO: Received SPI reply frame: %s" % format(spiReplyFrame, "05x")
 			return spiReplyFrame
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -898,7 +937,7 @@ def setFastOrMode(fastOrModeEnable=0) :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -909,7 +948,7 @@ def setFastOrMode(fastOrModeEnable=0) :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 	pass
 
@@ -931,7 +970,7 @@ def setFrameCounterEventEnable(frameCounterEventEnable=0) :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -942,9 +981,51 @@ def setFrameCounterEventEnable(frameCounterEventEnable=0) :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 	pass
+
+
+##________________________________________________________________________________
+def setMux(muxEnable=0, muxAddress=0) :
+
+	"""
+	implements CHIPIX_ADC_SetMUX.vi 
+	"""
+
+	if(Connection.isConnected) :
+
+		## data to be sent (MUX enable, MUX address)
+		data = clamp(muxAddress, 0, 3) << 1 | muxEnable
+	
+		## build command string
+		commandString = commandPacket("setPcbMux", data)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "**ERROR: Connection to FPGA not available!"
+		return -1
+	pass
+
+
+
 
 
 ##________________________________________________________________________________
@@ -987,7 +1068,7 @@ def setScanMode(scanModeEnable=0) :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -998,7 +1079,7 @@ def setScanMode(scanModeEnable=0) :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -1027,7 +1108,7 @@ def setSpiSerialOffsetEnable(spiSerialOffsetEnable=0) :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -1038,7 +1119,7 @@ def setSpiSerialOffsetEnable(spiSerialOffsetEnable=0) :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -1082,7 +1163,7 @@ def setTxDataEnable(txDataEnable=0) :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -1093,7 +1174,7 @@ def setTxDataEnable(txDataEnable=0) :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -1103,9 +1184,9 @@ def showBar() :
 
 	if(ROOT.gROOT.IsBatch()) :
 
-		print "\n"
+		print ""
 		print "**WARN: Application started in batch mode, cannot open GUI items !"
-		print "        Use ROOT.gROOT.SetBatch(0) if you really want graphics. \n"
+		print "        Use ROOT.gROOT.SetBatch(0) if you really want graphics. "
 		pass
 
 	else :
@@ -1154,7 +1235,7 @@ def waitDelay(delay=0x00000) :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -1165,7 +1246,7 @@ def waitDelay(delay=0x00000) :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -1211,16 +1292,16 @@ def writeECCR(r) :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
-			print "\n**INFO: ECCR values successfully written to chip!\n"
+			print "**INFO: ECCR values successfully written to chip!"
 			return 1
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -1258,11 +1339,11 @@ def writeGCR(r, mode="auto") :
 			## validate tx/rx packets
 			if(replyString != commandString) :
 
-				print "\n**ERROR: Command error!"
+				print "**ERROR: Command error!"
 				return -1
 
 			else :
-				print "\n**INFO: GCR values successfully written to chip!\n"
+				print "**INFO: GCR values successfully written to chip!"
 				return 1
 
 
@@ -1292,11 +1373,11 @@ def writeGCR(r, mode="auto") :
 			## validate tx/rx packets
 			if(replyString != commandString) :
 
-				print "\n**ERROR: Command error!"
+				print "**ERROR: Command error!"
 				return -1
 
 			else :
-				print "\n**INFO: GCR values successfully written to chip!\n"
+				print "**INFO: GCR values successfully written to chip!"
 				return 1
 
 		else :
@@ -1305,7 +1386,7 @@ def writeGCR(r, mode="auto") :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
 
@@ -1339,7 +1420,7 @@ def writeSpiCommandRam(spiCommandRamData=0x00000000) :
 		## validate tx/rx packets
 		if(replyString != commandString) :
 
-			print "\n**ERROR: Command error!"
+			print "**ERROR: Command error!"
 			return -1
 
 		else :
@@ -1350,6 +1431,6 @@ def writeSpiCommandRam(spiCommandRamData=0x00000000) :
 
 	else :
 
-		print "\n**ERROR: Connection to FPGA not available!\n"
+		print "**ERROR: Connection to FPGA not available!"
 		return -1
 
