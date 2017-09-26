@@ -198,6 +198,17 @@ def commandPacket(command="", data=0x00000000) :
 	elif(command == "flushEvents") :
 		cmdHex = 0x00C1
 
+
+	#############################################################
+	##   **WARN: hex codes from CHIPIX_ADC_Command_Packet.vi   ##
+	#############################################################
+
+	elif(command == "readPcbAdc") :
+		cmdHex = 0x0001
+
+	elif(command == "setPcbMux") :
+		cmdHex = 0x0002
+
 	else :
 		pass
 
@@ -207,7 +218,7 @@ def commandPacket(command="", data=0x00000000) :
 
 	1. rotate-left cmdHex by 4, i.e. add a '0' to the right, e.g. 0x00C1 => 0x0C10) 
 
-	2. rotate-left the constant 0x0004 by 12, i.e. 0x0004 => 0x4000 
+	2. rotate-left the constant 0x0004 (normal tasks) or 0x0005 (on-PCB MUX and ADC tasks) by 12, i.e. 0x0004 => 0x4000 
 
 	3. bitwise-or together the tho results, e.g. 0x4000 | 0x0C10 = 0x4C10
 
@@ -222,7 +233,18 @@ def commandPacket(command="", data=0x00000000) :
 
 	dataLo = data & 0x0000FFFF
 	dataHi = (data >> 16) & 0x0000FFFF
-	cmdOr = rol(0x0004, 12) | rol(cmdHex, 4)
+
+	if(command == "readPcbAdc" or command == "setPcbMux") :
+
+		## rotate-left by 5, special case
+		cmdOr = rol(0x0005, 12) | rol(cmdHex, 4)
+
+	else :
+
+		## rotate-left by 4, normal case
+		cmdOr = rol(0x0004, 12) | rol(cmdHex, 4)
+
+
 	packetHi = cmdOr | (dataHi & 0x000F)
 	packetLo = dataLo
 
