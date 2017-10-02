@@ -1,12 +1,16 @@
 extra/*
 
 *.pyc
+.*.swp
 
 test/*
 pychipix/*.pyc
 pychipix/*.pyo
+pychipix/*.*.swp
 
 pychipix/*/*/.pyc
 pychipix/*/*/.pyo
+pychipix/*/*/.*.swp
+
 
 user/data/*.root

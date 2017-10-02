@@ -56,7 +56,7 @@ hCommandErrors = ROOT.TH1F("hCommandErrors", "", 2, -0.5, 1.5)
 
 
 ##________________________________________________________________________________
-def broadcastiPCRconfiguration(r) :
+def broadcastPCRconfiguration(r) :
 
 	## **NOTE: mapped as "Write PCR Defaults" button in TestCommands.vi
 
