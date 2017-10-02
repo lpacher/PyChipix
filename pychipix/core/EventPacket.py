@@ -31,12 +31,12 @@ EventPacket() - constructor
 
 class EventPacket(object) :
 
-	def __init__(self, Timestamp=0, PixelNumber=0, TOT=0) :
+	##________________________________________________________________________________
+	def __init__(self, timestamp=0, pixelNumber=0, tot=0) :
 
-		self.fTimestamp   = Timestamp
-		self.fPixelNumber = PixelNumber
-		self.fTOT         = TOT
-
+		self.fTimestamp   = timestamp
+		self.fPixelNumber = pixelNumber
+		self.fTOT         = tot
 
 
 
@@ -60,21 +60,21 @@ class EventPacket(object) :
 
 
 	##________________________________________________________________________________
-	def SetPixelNumber(selfi, value) :
+	def SetPixelNumber(selfi, pixelNumberValue) :
 
-		self.fPixelNumber = value
-
-
-	##________________________________________________________________________________
-	def SetTimestamp(selfi, value) :
-
-		self.fTimestamp = value
+		self.fPixelNumber = pixelNumberValue
 
 
 	##________________________________________________________________________________
-	def SetTOT(self, value) :
+	def SetTimestamp(selfi, timestampValue) :
 
-		self.fTOT = value
+		self.fTimestamp = timestampValue
+
+
+	##________________________________________________________________________________
+	def SetTOT(self, totValue) :
+
+		self.fTOT = totValue
 
 
 """end class"""
