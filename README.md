@@ -3,5 +3,5 @@
 
 ```
 git clone https://github.com/lpacher/PyChipix
-```w
+```
 
