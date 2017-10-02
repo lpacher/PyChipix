@@ -331,11 +331,6 @@ def readExtADC() :
 			## packets match, get ADC code from last 2 characters out of 8
 			extAdcCode = int(replyString[6:].encode("hex"), 16)
 
-			## ADC code validation (TBC)
-			if(extAdcCode == 0xFFFF) :
-
-				print "**WARN: invalid ADC code 0xFFFF from SPI"
-
 			return extAdcCode 
 
 	else :
