@@ -203,10 +203,10 @@ def commandPacket(command="", data=0x00000000) :
 	##   **WARN: hex codes from CHIPIX_ADC_Command_Packet.vi   ##
 	#############################################################
 
-	elif(command == "readPcbAdc") :
+	elif(command == "readExtAdc") :
 		cmdHex = 0x0001
 
-	elif(command == "setPcbMux") :
+	elif(command == "setExtMux") :
 		cmdHex = 0x0002
 
 	else :
@@ -234,7 +234,7 @@ def commandPacket(command="", data=0x00000000) :
 	dataLo = data & 0x0000FFFF
 	dataHi = (data >> 16) & 0x0000FFFF
 
-	if(command == "readPcbAdc" or command == "setPcbMux") :
+	if(command == "readExtAdc" or command == "setExtMux") :
 
 		## rotate-left by 5, special case
 		cmdOr = rol(0x0005, 12) | rol(cmdHex, 4)

@@ -1,8 +1,28 @@
 
 import time
 
+## additional software delay
+cpuDelaySeconds = 1.0/100.0
+
+## board number
+boardNumber = 4
+
+## board status
+#boardStatus = "never_irradiated"
+boardStatus = "irradiated"
+
+
+## input waveform
+#inputWaveform = "ramp"
+inputWaveform = "sine"
+
+
+## input frequency [Hz]
+inputFrequency = 0.314159
+
 ## output files (.dat and .root are automatically appended)
-fileName = "code_density_ramp_board4_irradiated"
+fileName = "code_density_" + "board" + str(boardNumber) + "_waveform_" + inputWaveform + "_frequency_" + str(inputFrequency) + "Hz_cpuDelay_" + str(cpuDelaySeconds) + "_sec"
+
 
 ## results directory
 dataDir = "user/data/"
@@ -67,8 +87,8 @@ for i in range(Nentries) :
 		## fill code density hostogram
 		h.Fill(adcCode)
 
-		## wait some time (Bari)
-		#time.sleep(0.2)
+		## optionally, wait some time
+		time.sleep(cpuDelaySeconds)
 
 		if(i % 1000 == 0) :
 			ROOT.gPad.Modified()

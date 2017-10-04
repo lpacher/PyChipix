@@ -313,7 +313,7 @@ def readExtADC() :
 
 
 		## build command strings
-		commandString  = commandPacket("readPcbAdc", 0x00000) 
+		commandString  = commandPacket("readExtAdc", 0x00000) 
 
 
 		## send/receive packets
@@ -994,7 +994,7 @@ def setMux(muxEnable=0, muxAddress=0) :
 		data = clamp(muxAddress, 0, 3) << 1 | muxEnable
 	
 		## build command string
-		commandString = commandPacket("setPcbMux", data)
+		commandString = commandPacket("setExtMux", data)
 
 
 		## send/receive packets
@@ -1191,6 +1191,8 @@ def showBar() :
 		#bar.Show()
 
 		GUI.bar = ControlBar()
+
+		print type(GUI.bar)
 
 
 ##________________________________________________________________________________
