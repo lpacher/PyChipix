@@ -197,7 +197,7 @@ for k in range(Nchunks) :
 	else :
 		xFFT.append(
 			numpy.fft.fft(
-				xdata[k*NsamplesForFFT:k*NsamplesForFFT+NsamplesForFFT+1]
+				xdata[k*NsamplesForFFT:k*NsamplesForFFT+NsamplesForFFT+1]*w
 			)
 		)
 
