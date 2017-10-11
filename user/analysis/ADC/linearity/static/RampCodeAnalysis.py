@@ -99,7 +99,8 @@ hINL.SetMinimum(-1111)
 ## **TODO: catch wrong user input
 
 fileName = sys.argv[1]
-f = ROOT.TFile(fileName, "READ")
+#f = ROOT.TFile(fileName, "READ")
+f = ROOT.TFile(fileName, "UPDATE")
 
 ## get code-density histogram from ROOT file
 hCode = f.Get("hCode")
@@ -261,12 +262,9 @@ for c in cvs :
 ##   save results on ROOT file   ##
 ###################################
 
-f2 = ROOT.TFile("static.root", "RECREATE")
-
+## **NOTE: add hNorm, hDNL and hINL to the EXISTING ROOT file !
 for h in [hCode, hNorm, hDNL, hINL] :
-	h.Write()
-
-f2.Close()
+	h.Write("", ROOT.TObject.kOverwrite)
 
 
 #raw_input()
@@ -274,7 +272,7 @@ f2.Close()
 
 
 ## **DEBUG
-print hNorm.Integral()
-print fPDF.Integral(codeMin, codeMax)
+#print hNorm.Integral()
+#print fPDF.Integral(codeMin, codeMax)
 
 
