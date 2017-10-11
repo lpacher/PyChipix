@@ -279,7 +279,7 @@ signalFrequency = aFreq[indexSignalAmplitude]
 
 ## fit the noise-floor with a constant value (assume to fit over last 20% frequencies)
 fNoiseMax = max(aFreq)
-fNoiseMin = 0.75*fNoiseMax
+fNoiseMin = 0.8*fNoiseMax
 
 grFFT.Fit("pol0", "", "", fNoiseMin, fNoiseMax)
 
