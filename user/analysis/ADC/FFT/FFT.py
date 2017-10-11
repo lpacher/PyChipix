@@ -36,8 +36,9 @@ import ROOT
 #######################
 
 ## enable/disable Blackman filtering on sampled data
-applyWindowing = True
 #applyWindowing = False
+applyWindowing = True
+
 
 ## input signal nominal frequency in Hz
 fSignal = 0.3141592
@@ -45,7 +46,7 @@ fSignal = 0.3141592
 ## list of chunks for FFTs
 Nentries       = int(1e7)
 NsamplesForFFT = int(2**16)
-Nchunks        = 15 
+Nchunks        = 20
 
 ## fit range for sampling-frequency extraction
 fitMin = NsamplesForFFT + 3500
@@ -191,13 +192,13 @@ for k in range(Nchunks) :
 
 		xFFT.append(
 			numpy.fft.fft(
-				xdata[k*NsamplesForFFT:k*NsamplesForFFT+NsamplesForFFT+1]
+				xdata[k*NsamplesForFFT:k*NsamplesForFFT+NsamplesForFFT]
 			)
 		)
 	else :
 		xFFT.append(
 			numpy.fft.fft(
-				xdata[k*NsamplesForFFT:k*NsamplesForFFT+NsamplesForFFT+1]*w
+				xdata[k*NsamplesForFFT:k*NsamplesForFFT+NsamplesForFFT]*w
 			)
 		)
 
@@ -231,7 +232,7 @@ for i in range(NsamplesForFFT/2) :
 print "Done!"
 
 ## search the signal amplitude
-signalAmplitude = max(aMagn[1:])   # **NOTE: skip the DC component!
+signalAmplitude = max(aMagn[5:])   # **NOTE: skip the DC component!
 
 ## draw the spectrum with proper normalization
 grFFT = ROOT.TGraph()
