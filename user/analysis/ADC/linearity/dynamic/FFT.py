@@ -36,21 +36,21 @@ import ROOT
 #######################
 
 ## enable/disable Blackman filtering on sampled data
-#applyWindowing = False
-applyWindowing = True
+applyWindowing = False
+#applyWindowing = True
 
 ## input signal nominal frequency in Hz
 fSignal = 0.3141592
 
 ## list of chunks for FFTs
 Nentries       = int(1e7)
-NsamplesForFFT = int(2**16)
-Nchunks        = 50
+NsamplesForFFT = int(2**15)
+Nchunks        = 800
 skippedChunks  = []
 
 
 ## fit range for sampling-frequency extraction
-fitMin = NsamplesForFFT + 3500
+fitMin = 100
 fitMax = fitMin + 100
 
 ##########################
@@ -101,7 +101,7 @@ for line in f.readlines() :
 	## do not read all lines, only first Nchunks of NpointsForFFT samples for each chunck
 	if(i < Nchunks*NsamplesForFFT) :
 
-		code = float(line.split()[0])
+		code = int(line.split()[0])
 
 		## average invalid codes from SPI and zeroes
 		if( code == 0xFFFF or code == 0) :
@@ -170,7 +170,8 @@ hSamples.Fit("ff", "N", "", fitMin, fitMax)
 Tint = int(2*3.141592/ff.GetParameter(0))
 
 ## sampling frequency from fit
-fSampling = abs(Tint*fSignal)
+fSampling = 69.0 
+#fSampling = abs(Tint*fSignal)
 
 print "\nSampling frequency from fit: %f Hz" % fSampling
 
@@ -276,11 +277,9 @@ indexSignalAmplitude = aMagn.index(signalAmplitude)
 signalFrequency = aFreq[indexSignalAmplitude]  
 
 
-## fit the noise-floor with a constant value
-#fNoiseMin = 10*signalFrequency
-#fNoiseMax = 30*signalFrequency
-fNoiseMin = 30.0
-fNoiseMax = 50.0
+## fit the noise-floor with a constant value (assume to fit over last 25% frequencies)
+fNoiseMax = max(aFreq)
+fNoiseMin = 0.75*fNoiseMax
 
 grFFT.Fit("pol0", "", "", fNoiseMin, fNoiseMax)
 
@@ -364,5 +363,3 @@ grFFT.GetYaxis().SetTitleOffset(1.2)
 
 ROOT.gPad.Modified()
 ROOT.gPad.Update()
-
-
