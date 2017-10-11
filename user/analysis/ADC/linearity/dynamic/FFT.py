@@ -44,8 +44,8 @@ fSignal = 0.3141592
 
 ## list of chunks for FFTs
 Nentries       = int(1e7)
-NsamplesForFFT = int(2**17)
-Nchunks        = 20
+NsamplesForFFT = int(2**16)
+Nchunks        = 50
 skippedChunks  = []
 
 
@@ -105,7 +105,7 @@ for line in f.readlines() :
 
 		## average invalid codes from SPI and zeroes
 		if( code == 0xFFFF or code == 0) :
-			xdata[i]= 4096/2
+			xdata[i]= xdata[i-1]
 		else :
 			xdata[i] = code
 
@@ -277,8 +277,10 @@ signalFrequency = aFreq[indexSignalAmplitude]
 
 
 ## fit the noise-floor with a constant value
-fNoiseMin = 10*signalFrequency
-fNoiseMax = 30*signalFrequency
+#fNoiseMin = 10*signalFrequency
+#fNoiseMax = 30*signalFrequency
+fNoiseMin = 30.0
+fNoiseMax = 50.0
 
 grFFT.Fit("pol0", "", "", fNoiseMin, fNoiseMax)
 
@@ -311,8 +313,8 @@ magnHarmonics = []
 pwrHarmonics = 0.0
 
 
-## search first spurious harmonics (k=2,3,4,5)
-for k in range(2, 6) :
+## search first spurious harmonics (k=2,3,4,5,6,7)
+for k in range(2,8) :
 
 	## index of maximum
 	i = aMagn.index(max(aMagn[k*indexSignalAmplitude-5:k*indexSignalAmplitude+5]))
@@ -362,3 +364,5 @@ grFFT.GetYaxis().SetTitleOffset(1.2)
 
 ROOT.gPad.Modified()
 ROOT.gPad.Update()
+
+
