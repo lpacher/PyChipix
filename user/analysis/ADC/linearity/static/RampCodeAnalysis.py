@@ -52,7 +52,7 @@ codeMax = (2**Nbits-1) -10
 #########################
 
 
-## in case of a ramp/triangular input waveform the PDF is constant
+## in case of a ramp/triangular input waveform the PDF of ADC codes is constant
 def pdf(x, par) :
 
 	const = par[0]
@@ -84,8 +84,8 @@ hNorm.SetMinimum(-1111)
 ## DNL histogram (a clone of hCode)
 hDNL = hCode.Clone("hDNL")
 hDNL.Reset()
-hDNL.SetMaximum(1.0)
-hDNL.SetMinimum(-1.0)
+hDNL.SetMaximum(0.5)
+hDNL.SetMinimum(-0.5)
 
 
 ## INL histogram (a clone of hCode)
@@ -139,6 +139,9 @@ for code in range(0, int(hMax)+1) :
 norm = hNorm.Integral()
 hNorm.Scale(1.0/norm)
 
+cvs[1].cd()
+hNorm.Draw()
+
 
 #############################################
 ##   comparison with the theoretical PDF   ##
@@ -147,11 +150,7 @@ hNorm.Scale(1.0/norm)
 fPDF = ROOT.TF1("fPDF", pdf, hMin, hMax, 1)
 
 ## normalize to unit-area the PDF within [codeMin,codeMax]
-fPDF.SetParameter(0, 1.0/(codeMax-codeMin))
-
-
-cvs[1].cd()
-hNorm.Draw()
+fPDF.FixParameter(0, 1.0/(codeMax-codeMin))
 
 fPDF.SetRange(codeMin-1, codeMax+1)
 fPDF.SetLineColor(ROOT.kRed)
