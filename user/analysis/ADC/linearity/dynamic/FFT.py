@@ -277,7 +277,7 @@ indexSignalAmplitude = aMagn.index(signalAmplitude)
 signalFrequency = aFreq[indexSignalAmplitude]  
 
 
-## fit the noise-floor with a constant value (assume to fit over last 25% frequencies)
+## fit the noise-floor with a constant value (assume to fit over last 20% frequencies)
 fNoiseMax = max(aFreq)
 fNoiseMin = 0.75*fNoiseMax
 
