@@ -39,14 +39,15 @@ import ROOT
 #applyWindowing = False
 applyWindowing = True
 
-
 ## input signal nominal frequency in Hz
 fSignal = 0.3141592
 
 ## list of chunks for FFTs
 Nentries       = int(1e7)
-NsamplesForFFT = int(2**16)
+NsamplesForFFT = int(2**17)
 Nchunks        = 20
+skippedChunks  = []
+
 
 ## fit range for sampling-frequency extraction
 fitMin = NsamplesForFFT + 3500
@@ -90,6 +91,9 @@ f = open(fileName, "r")
 xdata = array.array('d', range(Nchunks*NsamplesForFFT))
 
 i = 0
+
+## catch user-input errors
+Nchunks = min(Nchunks, int(Nentries/NsamplesForFFT))
 
 ## loop over text file entries
 for line in f.readlines() :
@@ -188,19 +192,21 @@ xFFT = []
 print "\nComputing FFT arrays..."
 for k in range(Nchunks) :
 
-	if(applyWindowing == False) :
+	if( k+1 not in skippedChunks) : 
 
-		xFFT.append(
-			numpy.fft.fft(
-				xdata[k*NsamplesForFFT:k*NsamplesForFFT+NsamplesForFFT]
+		if(applyWindowing == False) :
+
+			xFFT.append(
+				numpy.fft.fft(
+					xdata[k*NsamplesForFFT:k*NsamplesForFFT+NsamplesForFFT]
+				)
 			)
-		)
-	else :
-		xFFT.append(
-			numpy.fft.fft(
-				xdata[k*NsamplesForFFT:k*NsamplesForFFT+NsamplesForFFT]*w
+		else :
+			xFFT.append(
+				numpy.fft.fft(
+					xdata[k*NsamplesForFFT:k*NsamplesForFFT+NsamplesForFFT]*w
+				)
 			)
-		)
 
 
 print "Done!"
@@ -222,11 +228,11 @@ for i in range(NsamplesForFFT/2) :
 	sum = 0.0
 
 	## **NOTE: skip the first chunk
-	for chunk in range(1, Nchunks) :
+	for chunk in range(Nchunks-len(skippedChunks)) :
 
 		sum = sum + abs(xFFT[chunk][i])/NsamplesForFFT
 
-	aMagn[i] = sum/(Nchunks-1)
+	aMagn[i] = sum/(Nchunks-len(skippedChunks))
 
 
 print "Done!"
@@ -246,23 +252,6 @@ c2 = ROOT.TCanvas()
 c2.cd()
 grFFT.Draw("AL")
 
-
-## cosmetics
-ROOT.gPad.SetGridx()
-ROOT.gPad.SetGridy()
-
-
-grFFT.GetXaxis().SetRangeUser(0.0, 5.0)
-grFFT.GetYaxis().SetRangeUser(-78.0, 0.0)
-
-grFFT.GetXaxis().SetTitle("frequency [Hz]")
-grFFT.GetYaxis().SetTitle("normalized FFT magnitude [dB]")
-
-grFFT.GetYaxis().CenterTitle()
-grFFT.GetYaxis().SetTitleOffset(1.2)
-
-ROOT.gPad.Modified()
-ROOT.gPad.Update()
 
 
 
@@ -352,3 +341,24 @@ print "SNR: %f dB" % SNR
 print "SINAD: %f dB" % SINAD
 print "ENOB: %f" % ENOB
 print "--------------------------------------------------"
+
+
+###################
+##   cosmetics   ##
+###################
+
+ROOT.gPad.SetGridx()
+ROOT.gPad.SetGridy()
+
+
+grFFT.GetXaxis().SetRangeUser(0.0, 5.0)
+grFFT.GetYaxis().SetRangeUser(1.2*SNR, 0.0)
+
+grFFT.GetXaxis().SetTitle("frequency [Hz]")
+grFFT.GetYaxis().SetTitle("normalized FFT magnitude [dB]")
+
+grFFT.GetYaxis().CenterTitle()
+grFFT.GetYaxis().SetTitleOffset(1.2)
+
+ROOT.gPad.Modified()
+ROOT.gPad.Update()
