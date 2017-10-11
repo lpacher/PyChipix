@@ -10,7 +10,7 @@
 # [Author]        Luca Pacher - pacher@to.infn.it
 # [Version]       1.0
 # [Language]      Python/ROOT
-# [Created]       Sep 34, 2017
+# [Created]       Sep 3, 2017
 # [Description]   Computes DNL/INL histograms from .root file containing ADC sampled data
 #                 and assuming a triangular input waveform
 #
