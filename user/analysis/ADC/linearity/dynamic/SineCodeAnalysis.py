@@ -99,8 +99,8 @@ hDNL.SetMinimum(-0.5)
 ## INL histogram (a clone of hCode)
 hINL = hCode.Clone("hINL")
 hINL.Reset()
-hINL.SetMaximum(-1111)
-hINL.SetMinimum(-1111)
+hINL.SetMaximum(6.5)
+hINL.SetMinimum(-6.5)
 
 
 ## ROOT input file-name
@@ -158,14 +158,15 @@ hNorm.Draw()
 #fPDF = ROOT.TF1("fPDF","[0]*(asin((x-[1])/[2])-asin((x-[1]-1)/[2]))", float(codeMin), float(codeMax))
 fPDF = ROOT.TF1("fPDF", pdf, float(codeMin), float(codeMax), 3)
 
-## normalize to unit-area the PDF within [codeMin,codeMax]
 
+## set initial parameters
 fPDF.SetParameter(0, 1.0)
 fPDF.SetParameter(1, (2**Nbits)/2)
 fPDF.SetParameter(2, (2**Nbits)/2)
 
 ## since the exact amplitude and offset are unknown, FIT the normalized code-density 
 ## but help the fitter by constraining the theoretical function to unit-area normalization
+## PDF within [codeMin,codeMax]
 
 #fPDF.FixParameter(0, 1.0/fPDF.Integral(codeMin, codeMax))
 fPDF.SetParameter(0, 1.0/fPDF.Integral(codeMin, codeMax))
@@ -177,6 +178,9 @@ fPDF.SetLineColor(ROOT.kRed)
 ## perform the fit
 hNorm.Fit("fPDF", "", "", float(codeMin), float(codeMax))
 
+
+## in case the fit over-estimates by one the offset
+fPDF.SetParameter(1, fPDF.GetParameter(1) -1) 
 
 
 ##########################################
