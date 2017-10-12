@@ -91,8 +91,8 @@ hDNL.SetMinimum(-0.5)
 ## INL histogram (a clone of hCode)
 hINL = hCode.Clone("hINL")
 hINL.Reset()
-hINL.SetMaximum(-1111)
-hINL.SetMinimum(-1111)
+hINL.SetMaximum(6.5)
+hINL.SetMinimum(-6.5)
 
 
 ## ROOT input file-name
