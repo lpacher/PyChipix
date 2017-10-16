@@ -119,7 +119,10 @@ r.UpdateRegisters()
 
 global hCode, hSample
 
-hCode = ROOT.TH1F("hCode", "", 4096, -0.5, 4095.5) 
+Nbits = 12
+Nbins = 2**Nbits
+
+hCode = ROOT.TH1F("hCode", "", Nbins, -0.5, Nbins + 0.5) 
 hSample = ROOT.TH1F("hSample", "", Nentries, 0.5, Nentries+0.5)
 
 if(ROOT.gROOT.IsBatch() == False) :
