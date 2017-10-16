@@ -8,8 +8,12 @@ pychipix/*.pyc
 pychipix/*.pyo
 pychipix/*.*.swp
 
-pychipix/*/.pyc
-pychipix/*/.pyo
-pychipix/*/.*.swp
+pychipix/core/.pyc
+pychipix/core/.pyo
+pychipix/core/.*.swp
 
-user/data/*.root
+pychipix/gui/.pyc
+pychipix/gui/.pyo
+pychipix/gui/.*.swp
+
+user/data/*
