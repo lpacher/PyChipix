@@ -1340,7 +1340,7 @@ def writeGCR(r, mode="auto") :
 				return -1
 
 			else :
-				print "**INFO: GCR values successfully written to chip!"
+				#print "**INFO: GCR values successfully written to chip!"
 				return 1
 
 

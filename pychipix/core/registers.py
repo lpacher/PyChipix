@@ -439,7 +439,7 @@ class GCR(object) :
 		self.fParameters["ADC: MON_MUX    "] = self.fMonMux
 		self.fParameters["PV:  ILDAC      "] = self.fIldac
 		self.fParameters["PV:  IGDAC      "] = self.fIgdac
-		self.fParameters["PV:  VREF_FRUM  "] = self.fVrefKrum2
+		self.fParameters["PV:  VREF_KRUM  "] = self.fVrefKrum2
 		self.fParameters["PV:  IKRUM      "] = self.fIkrum
 		self.fParameters["PV:  IFC_BIAS   "] = self.fIfcBias
 		self.fParameters["PV:  IPA_IN_BIAS"] = self.fIpaInBias
@@ -831,7 +831,7 @@ class GCR(object) :
 		self.fParameters["ADC: MON_MUX    "] = self.fMonMux
 		self.fParameters["PV:  ILDAC      "] = self.fIldac
 		self.fParameters["PV:  IGDAC      "] = self.fIgdac
-		self.fParameters["PV:  VREF_FRUM  "] = self.fVrefKrum2
+		self.fParameters["PV:  VREF_KRUM  "] = self.fVrefKrum2
 		self.fParameters["PV:  IKRUM      "] = self.fIkrum
 		self.fParameters["PV:  IFC_BIAS   "] = self.fIfcBias
 		self.fParameters["PV:  IPA_IN_BIAS"] = self.fIpaInBias
