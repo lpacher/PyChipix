@@ -1,42 +1,92 @@
 
+#----------------------------------------------------------------------------------------------------
+#                                        VLSI Design Laboratory
+#                               Istituto Nazionale di Fisica Nucleare (INFN)
+#                                   via Giuria 1 10125, Torino, Italy
+#----------------------------------------------------------------------------------------------------
+# {Trace}
+# [Filename]      codeDensity.py
+# [Project]       CHIPIX65 pixel ASIC demonstrator
+# [Author]        Luca Pacher - pacher@to.infn.it
+# [Version]       1.0
+# [Language]      Python/ROOT
+# [Created]       Aug 31, 2017
+# [Description]   Code-density acquisition script for internal-ADC testing. Edit the script
+#                 and change user settings to fit board number, input waveform, frequency etc.
+#
+# [Notes]         Usage:
+#
+#                 ./bin/lin/pychipix ./user/scripts/codeDensity.py
+# {Trace}
+#----------------------------------------------------------------------------------------------------
+
+
+## STL components
 import time
 
+
+#######################
+##   user settings   ##
+#######################
+
+
+## number of entries (10'000'000 for 12-bit ADC)
+Nentries = int(10e6)
+
 ## additional software delay
-cpuDelaySeconds = 1.0/100.0
+#cpuDelaySeconds = 0.0                  # approx. 1000 samples/  1s = 1000 Hz sampling rate
+#cpuDelaySeconds = 1.0/1000.0           # approx. 1000 samples/  3s =  300 Hz sampling rate
+#cpuDelaySeconds = 1.0/100.0            # approx. 1000 samples/ 10s =  100 Hz sampling rate
+#cpuDelaySeconds = 1.0/10.0             # approx  1000 samples/100s =   10 Hz sampling rate
 
-## board number
-boardNumber = 4
+cpuDelaySeconds = 1e-2
+#cpuDelaySeconds = 0.0
 
-## board status
-#boardStatus = "never_irradiated"
-boardStatus = "irradiated"
+
+## board number/board status
+
+boardNumber = 1 ;   boardStatus = "never_irradiated"
+
+#boardNumber = 2
+#boardNumber = 3
+#boardNumber = 4
+#boardNumber = 5
+#boardNumber = 6
+#boardNumber = 7
+#boardNumber = 8
+#boardNumber = 9 ;   boardStatus = "irradiated"
 
 
 ## input waveform
-#inputWaveform = "ramp"
-inputWaveform = "sine"
-
+inputWaveform = "ramp"
+#inputWaveform = "sine"
 
 ## input frequency [Hz]
 inputFrequency = 0.314159
 
+
+#########################
+
 ## output files (.dat and .root are automatically appended)
-fileName = "code_density_" + "board" + str(boardNumber) + "_waveform_" + inputWaveform + "_frequency_" + str(inputFrequency) + "Hz_cpuDelay_" + str(cpuDelaySeconds) + "_sec"
+fileName = "code_density_" + "board" + str(boardNumber) + "_waveform_" + inputWaveform + "_frequency_" + str(inputFrequency) + "Hz_cpuDelay_" + str(cpuDelaySeconds) + "sec"
 
 
 ## results directory
-dataDir = "user/data/"
+
+## **TODO: catch errors on paths and create directories otherwise
+if(inputWaveform == "ramp") :
+	dataDir = "user/data/ADC/internal/linearity/static/"
+else :
+	dataDir = "user/data/ADC/internal/linearity/dynamic/"
+
 
 ## output files
 
-dateAndTime = time.strftime("_%Y-%m-%d_%H:%M:%S") 
+dateAndTime = time.strftime("_%Y-%m-%d_%H-%M-%S") 
 
 textFileName = dataDir + fileName + dateAndTime + ".dat"
 rootFileName = dataDir + fileName + dateAndTime + ".root"
 
-
-## number of entries (10'000'000)
-Nentries = int(10e6)
 
 ROOT.gROOT.SetStyle("Plain")
 ROOT.gStyle.SetOptStat("ourmen")
@@ -55,28 +105,48 @@ r = GCR()
 r.SetParameter(15, 31)
 r.UpdateRegisters()
 
-writeGCR(r)
+#writeGCR(r)
 
 ## readback to check
-readGCR().PrintParameters()
+#readGCR().PrintParameters()
 
 
 ## pause to check, press RETURN to continue 
 #raw_input()
 
 
-## **NOTE: declare histogram as global, otherwise it goes out of scope after script execuption!
+## **NOTE: declare histograms as global, otherwise they go out of scope after script execuption!
 
-global h
+global hCode, hSample
 
-h = ROOT.TH1F("hCode", "", 4096, -0.5, 4095.5) 
-h.Draw()
+hCode = ROOT.TH1F("hCode", "", 4096, -0.5, 4095.5) 
+hSample = ROOT.TH1F("hSample", "", Nentries, 0.5, Nentries+0.5)
+
+if(ROOT.gROOT.IsBatch() == False) :
+	hCode.Draw()
 
 textFile = open(textFileName, "w")
+rootFile = ROOT.TFile(rootFileName, "RECREATE")
+
+hCode.Write()
+hSample.Write()
 
 for i in range(Nentries) :
 
 	try :
+
+		## save on ROOT file each 1000 samples
+		if(i % 1000 == 0 and i != 0) :
+			print "Entries:" , int(hCode.GetEntries())
+			hCode.Write("", ROOT.TObject.kOverwrite)
+			hSample.Write("", ROOT.TObject.kOverwrite)
+
+			if(ROOT.gROOT.IsBatch() == False) :
+				ROOT.gPad.Modified()
+				ROOT.gPad.Update()
+
+		## write GCRs each time to avoid spurious resets
+		writeGCR(r)
 
 		## read ADC
 		adcCode = readADC()
@@ -85,14 +155,16 @@ for i in range(Nentries) :
 		textFile.write("%d\n" % adcCode)
 
 		## fill code density hostogram
-		h.Fill(adcCode)
+		hCode.Fill(adcCode)
+
+		## fill samples histogram
+		hSample.SetBinContent(i+1, adcCode)
 
 		## optionally, wait some time
 		time.sleep(cpuDelaySeconds)
 
-		if(i % 1000 == 0) :
-			ROOT.gPad.Modified()
-			ROOT.gPad.Update()
+		"""
+		## **OBSOLETE: this introduced discontinuities in the sampled waveform!
 
 		## check that everything is OK inside the chip
 		if(i % 10000 == 0) :
@@ -101,9 +173,15 @@ for i in range(Nentries) :
 				pass
 			else :
 				time.sleep(0.5)
-				disconnect()
-				break
+				print "Spurious reset detected!"
 
+				## re-write GCR
+				writeGCR(r)
+				#disconnect()
+				#break
+		"""
+
+	## catch Ctrl+C user input
 	except KeyboardInterrupt :
 
 		time.sleep(0.5)
@@ -111,14 +189,15 @@ for i in range(Nentries) :
 		disconnect()
 		break
 
+if(ROOT.gROOT.IsBatch() == False) :
+	ROOT.gPad.Modified()
+	ROOT.gPad.Update()
 
-ROOT.gPad.Modified()
-ROOT.gPad.Update()
+hCode.Write("", ROOT.TObject.kOverwrite)
+hSample.Write("", ROOT.TObject.kOverwrite)
 
-rootFile = ROOT.TFile(rootFileName, "RECREATE")
-
-h.Write()
 rootFile.Close()
 textFile.close()
 
 #raw_input()
+
