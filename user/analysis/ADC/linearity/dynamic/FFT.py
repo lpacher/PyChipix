@@ -29,8 +29,10 @@ import math
 
 ## ROOT components
 import ROOT
-ROOT.gROOT.SetStyle("Plain")
+#ROOT.gROOT.SetStyle("Plain")
 
+from PaperStyle import SetPaperStyle
+SetPaperStyle()
 
 
 #######################
