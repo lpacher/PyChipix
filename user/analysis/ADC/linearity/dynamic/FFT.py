@@ -44,8 +44,8 @@ fSignal = 0.3141592
 
 ## list of chunks for FFTs
 Nentries       = int(1e7)
-NsamplesForFFT = int(2**15)
-Nchunks        = 800
+NsamplesForFFT = int(2**16)
+Nchunks        = 150
 skippedChunks  = []
 
 
@@ -138,11 +138,13 @@ sineOffset = sineMin + sineAmpl
 
 Nbins = len(xdata)
 
-hSamples = ROOT.TH1F("hSine", "", Nbins, 0.5, Nbins + 0.5)
+hSamples = ROOT.TH1F("hSamples", "", Nbins, 0.5, Nbins + 0.5)
+hSamplesNorm = hSamples.Clone("hSamplesNorm")
 
 for i in range(Nbins) :
 
-	hSamples.SetBinContent(i+1, (xdata[i]-sineOffset)/sineAmpl)
+	hSamples.SetBinContent(i+1, xdata[i])
+	hSamplesNorm.SetBinContent(i+1, (xdata[i]-sineOffset)/sineAmpl)
 
 
 #c1 = ROOT.TCanvas()
@@ -167,11 +169,11 @@ hSamples.Fit("ff", "N", "", fitMin, fitMax)
 #ROOT.gPad.Modified()
 #ROOT.gPad.Update()
 
-Tint = int(2*3.141592/ff.GetParameter(0))
-
 ## sampling frequency from fit
-fSampling = 69.0 
+#Tint = int(2*3.141592/ff.GetParameter(0))
 #fSampling = abs(Tint*fSignal)
+
+fSampling = 69.0 
 
 print "\nSampling frequency from fit: %f Hz" % fSampling
 
@@ -260,6 +262,8 @@ grFFT.Draw("AL")
 
 f = ROOT.TFile("FFT.root", "RECREATE")
 
+hSamples.Write()
+hSamplesNorm.Write()
 grFFT.Write()
 f.Close()
 
