@@ -256,6 +256,18 @@ c2.cd()
 grFFT.Draw("AL")
 
 
+###################
+##   cosmetics   ##
+###################
+
+hSamples.SetXTitle("sample number")
+hSamples.SetYTitle("ADC code")
+
+hSamplesNorm.SetXTitle("sample number")
+hSamplesNorm.SetYTitle("normalized ADC code")
+
+grFFT.GetXaxis().SetTitle("frequency [Hz]")
+grFFT.GetYaxis().SetTitle("normalized magnitude [dB]")
 
 
 ## dump FFT to ROOT file
