@@ -29,6 +29,8 @@ import math
 
 ## ROOT components
 import ROOT
+ROOT.gROOT.SetStyle("Plain")
+
 
 
 #######################
@@ -303,6 +305,7 @@ grFFT.Fit("pol0", "", "", fNoiseMin, fNoiseMax)
 ## Signal-to-Noise Ratio from fit
 ff2 = grFFT.GetFunction("pol0")
 ff2.SetRange(0.0, fNoiseMax) 
+ff2.SetLineColor(ROOT.kRed)
 SNR = ff2.GetParameter(0)
 
 
