@@ -77,6 +77,103 @@ def cpuCommandPacket(cpuCommand="", cpuData=0x00000000) :
 	return GbPhyCommandPacket("cpu", cpuCmdHex, cpuData)
 
 
+
+
+##________________________________________________________________________________
+def hardwareCommandPacket(hardwareCommand="", hardwareData=0x00000) :
+	"""Python implementation of CHIPIX_Hardware_Command_Packet.vi"""
+
+
+	## 16-bit unsigned integer
+	hardwareCmdHex = 0x0000
+
+	if(hardwareCommand == "readGpioSwitches") :
+		hardwareCmdHex = 0x0001
+
+	elif(hardwareCommand == "resetDelayControls") :
+		hardwareCmdHex = 0x0003
+
+	elif(hardwareCommand == "readDelayControls") :
+		hardwareCmdHex = 0x0004
+
+	elif(hardwareCommand == "programTxDelays") :
+		hardwareCmdHex = 0x0005
+
+	elif(hardwareCommand == "setMmcmRamAddress") :
+		hardwareCmdHex = 0x0020
+
+	elif(hardwareCommand == "writeMmcmRamA") :
+		hardwareCmdHex = 0x0021
+
+	elif(hardwareCommand == "writeMmcmRamB") :
+		hardwareCmdHex = 0x0022
+
+	elif(hardwareCommand == "writeMmcmRamC") :
+		hardwareCmdHex = 0x0023
+
+	elif(hardwareCommand == "applyMmcmSettings") :
+		hardwareCmdHex = 0x0024
+
+	elif(hardwareCommand == "getMmcmLockStatus") :
+		hardwareCmdHex = 0x0025
+
+	elif(hardwareCommand == "resetMmcmLockCounter") :
+		hardwareCmdHex = 0x0026
+
+	elif(hardwareCommand == "readMmcmLockCounter") :
+		hardwareCmdHex = 0x0027
+
+	elif(hardwareCommand == "resetTestPulseSerClkMmcm") :
+		hardwareCmdHex = 0x0028
+
+	elif(hardwareCommand == "setFanPwm") :
+		hardwareCmdHex = 0x0030
+
+	elif(hardwareCommand == "enableFanPwm") :
+		hardwareCmdHex = 0x0031
+
+	elif(hardwareCommand == "readFanPwm") :
+		hardwareCmdHex = 0x0032
+
+	else :
+		pass
+
+
+	"""
+	Richard code to build 32-bit CPU data:
+
+	1. rotate-left hardwareCmdHex by 4, i.e. add a '0' to the right, e.g. 0x0001 => 0x0010) 
+
+	2. rotate-left the constant 0x0001 by 12, i.e. 0x0001 => 0x1000 
+
+	3. bitwise-or together the tho results, e.g. 0x1000 | 0x0010 = 0x1010
+
+	4. split 32-bit hardware data into 16-bit low and 16-bit high slices hardwareDataHi and hardwareDataLo
+
+	5. remove 12 MSBs from dataHi by and-ing with 0x000F
+
+	6. bitwise-or (3) with stripped dataHi to form packetHi
+
+	7. join together the partial results packetHi and packetLo
+	"""
+
+	hardwareDataLo = hardwareData & 0x0000FFFF
+	hardwareDataHi = (hardwareData >> 16) & 0x0000FFFF
+
+
+	## bitwise OR on rotated-left values
+	hardwareCmdOr = rol(0x0001, 12) | rol(hardwareCmdHex, 4)
+
+
+	hardwarePacketHi = hardwareCmdOr | (hardwareDataHi & 0x000F)
+	hardwarePacketLo = hardwareDataLo
+
+	hardwarePacket = str(format(hardwarePacketHi, '04x')) + str(format(hardwarePacketLo, '04x'))
+	p = int(hardwarePacket, 16)
+
+	return cpuCommandPacket("fifoCommand", p)
+
+
 ##________________________________________________________________________________
 def commandPacket(command="", data=0x00000000) :
 	"""Python implementation of CHIPIX_Command_Packet.vi"""

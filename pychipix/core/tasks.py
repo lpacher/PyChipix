@@ -19,7 +19,7 @@
 
 ## standard library components
 import os
-
+import math
 
 ## ROOT components
 try :
@@ -91,7 +91,8 @@ def connect(hostIpAddress="192.168.1.1", boardNumber=0, timeoutMilliSeconds=1000
 	if(firmwareVersion != -1) :
 		print "**INFO: Connection to FPGA successfully established!"
 		Connection.isConnected = True
-		return [1, firmwareVersion]
+		#return [1, firmwareVersion]
+		return c
 
 	else :
 		print "**ERROR: Cannot connect to target FPGA!"
@@ -278,6 +279,45 @@ def programTestPulseSequence(testPulseSequence=[0]) :
 	pass
 
 
+##________________________________________________________________________________
+def programTxDelay(txDelay=0) :
+
+
+	if(Connection.isConnected) :
+
+		## check txDelay value, it must be a 5-bit value!
+		if(txDelay > 31) :
+			txDelayValue = txDelay - 31    # **TODO
+
+		else :
+			txDelayValue = txDelay & 0x1F     ## **NOTE: Richard uses an Array Subset
+
+	
+		## build command string
+		commandString = hardwareCommandPacket("programTxDelays", txDelayValue)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "**ERROR: Connection to FPGA not available!"
+		return -1
+
 
 ##________________________________________________________________________________
 def quit() :
@@ -395,6 +435,7 @@ def readECCR() :
 	if(Connection.isConnected) :
 
 		## create a default ECCR object, then fill with received words
+		r = ECCR()
 
 		## **DEBUG
 		#for i in range(2) :
@@ -673,7 +714,7 @@ def resetChip() :
 
 		else :
 
-			print "**INFO: reset sent to ASIC"
+			print "**INFO: Reset sent to ASIC"
 			return 1
 
 
@@ -717,6 +758,41 @@ def resetClockCounters() :
 
 
 ##________________________________________________________________________________
+def resetDelayControls() :
+
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString0 = hardwareCommandPacket("resetDelayControls", 0x1)
+		commandString1 = hardwareCommandPacket("readDelayControls", 0x0)
+
+		commandString = commandString0 + commandString1
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString[0:8] != commandString0 or replyString[8:12] != commandString1[0:4])  :
+
+			print "**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, read counter value
+			#delayControlsReady = replyString[14:16].encode("hex")   **TODO
+			return 1
+
+	else :
+
+		print "**ERROR: Connection to FPGA not available!"
+		return -1
+
+
+##________________________________________________________________________________
 def resetFpgaCounters() :
 
 
@@ -738,7 +814,7 @@ def resetFpgaCounters() :
 
 		else :
 
-			print "**INFO: reset sent to FPGA counters"
+			print "**INFO: Reset sent to FPGA counters"
 			pass
 
 
@@ -770,7 +846,7 @@ def resetTestPulseSerializer() :
 
 		else :
 
-			print "**INFO: reset sent to FPGA counters"
+			print "**INFO: Reset sent to test-pulse serializer"
 			pass
 
 
@@ -887,12 +963,13 @@ def setAutozeroingEnable(autozeroingEnable, r) :
 
 	## **TODO
 
-	## **NOTE: this function in Richard's .vi => 1. enables AZ and 2. programs PWM generator according to GCR! Maye redundant?
+	## **NOTE: this function in Richard's .vi => 1. enables AZ and 2. programs PWM generator according to GCR! Maybe redundant?
 
 
 	"""
-	pwmHigh = r.GetParameter(0)
-	pwmLow  = r.GetParameter(1)
+	pwmDelay = r.GetParameter(1)
+	pwmHigh  = r.GetParameter(1)
+	pwmLow   = r.GetParameter(3)
 	"""
 
 	pass
@@ -908,10 +985,153 @@ def setBoardLines(gpio=0, pinswap=0) :
 
 
 ##________________________________________________________________________________
-def setExtTriggerEnable(extTriggerEnable=0, extTriggerTestPulseEnable=0, extTriggetTestPulseCounterMax=0) :
+def setEventsEnable(eventsEnable=0) :
 
-	## **TODO
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = cpuCommandPacket("setEventsEnable", eventsEnable)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "**ERROR: Connection to FPGA not available!"
+		return -1
 	pass
+	
+
+
+
+
+##________________________________________________________________________________
+def setEventsIdleTimeout(eventsIdleTimeout=0) :
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+		commandString = cpuCommandPacket("setEventsIdleTimeout", eventsIdleTimeout)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "**ERROR: Connection to FPGA not available!"
+		return -1
+	pass
+	
+
+
+
+##________________________________________________________________________________
+def setEventsMaxBufferSize(eventSizeBytes=0) :
+
+	if(Connection.isConnected) :
+
+	
+		## build command string
+
+		eventsMaxBufferSize = int(eventSizeBytes*math.floor(1012/eventSizeBytes) + 8)
+
+
+		commandString = cpuCommandPacket("setEventsMaxBufferSize", eventsMaxBufferSize)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			#return eventsMaxBufferSize
+			return 1
+
+
+	else :
+
+		print "**ERROR: Connection to FPGA not available!"
+		return -1
+	pass
+
+
+
+##________________________________________________________________________________
+def setExtTriggerEnable(extTriggerEnable=0, extTriggerTestPulseEnable=0, extTriggerTestPulseCounterMax=0) :
+
+	if(Connection.isConnected) :
+
+		## combine enables and counter value
+		## **NOTE: Richard code uses number-to-boolean array slicing
+		data = extTriggerEnable
+		data = data | extTriggerTestPulseEnable << 1
+		data = data | (extTriggerTestPulseCounterMax & 0x0000000A) << 2
+
+
+		## build command string
+		commandString = commandPacket("setExtTriggerEnable", data)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString != commandString) :
+
+			print "**ERROR: Command error!"
+			return -1
+
+		else :
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "**ERROR: Connection to FPGA not available!"
+		return -1
+	pass
+
 
 
 ##________________________________________________________________________________
@@ -1209,7 +1429,34 @@ def synchronizeTx8b10b() :
 	## **TODO
 	#return syncOK
 
-	pass
+	if(Connection.isConnected) :
+	
+		## build command string
+		commandString = commandPacket("syncTx8b10b", 0x00000)
+
+
+		## send/receive packets
+		replyString = GbPhyCommandAndResponse(c, commandString)
+
+
+		## validate tx/rx packets
+		if(replyString[0:4+1] != commandString[0:4+1]) :
+
+			print "**ERROR: Command error!"
+			return -1
+
+		else :
+
+			syncOK = int(replyString[7].encode("hex"), 16)
+
+			## packets match, nothing to do
+			return 1
+
+
+	else :
+
+		print "**ERROR: Connection to FPGA not available!"
+		return -1
 
 
 ##________________________________________________________________________________
@@ -1331,7 +1578,6 @@ def writeGCR(r, mode="auto") :
 			## send/receive packets
 			replyString = GbPhyCommandAndResponse(c, commandString)
 
-			print "here"
 
 			## validate tx/rx packets
 			if(replyString != commandString) :

@@ -17,6 +17,7 @@
 #----------------------------------------------------------------------------------------------------
 
 
+## STL components
 import socket
 
 
@@ -47,55 +48,56 @@ class Connection(object) :
 		self.fRemoteAddress     = ""
 		self.fRemotePort        = 65535 
 		self.fRemoteEventsPort  = 65535
-		self.fRemoteEventHeader = 65535
+		self.fRemoteEventsHeader = 65535
 
 
 		## determine IP address/port according to board number
+		## **NOTE: fRemoteEventsHeader = 0xDCBA + boardNumber
 		if(self.fBoardNumber == 0) :
 			self.fRemoteAddress     = "192.168.1.10"
 			self.fRemotePort        = 10000
 			self.fRemoteEventsPort  = 10020
-			self.fRemoteEventHeader = 0xDCBA
+			self.fRemoteEventsHeader = 0xDCBA
 		elif(self.fBoardNumber == 1) :
 			self.fRemoteAddress     = "192.168.1.11"
 			self.fRemotePort        = 10001
 			self.fRemoteEventsPort  = 10021
-			self.fRemoteEventHeader = 0xDCBB
+			self.fRemoteEventsHeader = 0xDCBB
 		elif(self.fBoardNumber == 2) :
 			self.fRemoteAddress     = "192.168.1.12"
 			self.fRemotePort        = 10002
 			self.fRemoteEventsPort  = 10022
-			self.fRemoteEventHeader = 0xDCBC
+			self.fRemoteEventsHeader = 0xDCBC
 		elif(self.fBoardNumber == 3) :
 			self.fRemoteAddress     = "192.168.1.13"
 			self.fRemotePort        = 10003
 			self.fRemoteEventsPort  = 10023
-			self.fRemoteEventHeader = 0xDCBD
+			self.fRemoteEventsHeader = 0xDCBD
 		elif(self.fBoardNumber == 4) :
 			self.fRemoteAddress     = "192.168.1.14"
 			self.fRemotePort        = 10004
 			self.fRemoteEventsPort  = 10024
-			self.fRemoteEventHeader = 0xDCBE
+			self.fRemoteEventsHeader = 0xDCBE
 		elif(self.fBoardNumber == 5) :
 			self.fRemoteAddress     = "192.168.1.15"
 			self.fRemotePort        = 10005
 			self.fRemoteEventsPort  = 10025
-			self.fRemoteEventHeader = 0xDCBF
+			self.fRemoteEventsHeader = 0xDCBF
 		elif(self.fBoardNumber == 6) :
 			self.fRemoteAddress     = "192.168.1.16"
 			self.fRemotePort        = 10006
 			self.fRemoteEventsPort  = 10026
-			self.fRemoteEventHeader = 0xDCB8
+			self.fRemoteEventsHeader = 0xDCB8
 		elif(self.fBoardNumber == 7) :
 			self.fRemoteAddress     = "192.168.1.17"
 			self.fRemotePort        = 10007
 			self.fRemoteEventsPort  = 10027
-			self.fRemoteEventHeader = 0xDCB9
+			self.fRemoteEventsHeader = 0xDCB9
 		else :	
 			self.fRemoteAddress     = ""
 			self.fRemotePort        = 65535
 			self.fRemoteEventsPort  = 65535
-			self.fRemoteEventHeader = 65535
+			self.fRemoteEventsHeader = 65535
 
 
 		## required to send/receive from FPGA
@@ -140,16 +142,16 @@ class Connection(object) :
 
 
 	##________________________________________________________________________________
-	def GetRemoteEventHeader(self) :
+	def GetRemoteEventsHeader(self) :
 
-		return self.fRemoteEventHeader
+		return self.fRemoteEventsHeader
 
 
 
 	##________________________________________________________________________________
-	def GetRemoteEventPort(self) :
+	def GetRemoteEventsPort(self) :
 
-		return self.fRemoteEventPort
+		return self.fRemoteEventsPort
 
 
 	##________________________________________________________________________________

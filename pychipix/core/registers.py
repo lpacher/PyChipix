@@ -383,7 +383,7 @@ class GCR(object) :
 
 		## ADC configuration
 		AdcMode=0,                      # GCR_DATA[    202]
-		AdcGain=7,                      # GCR_DATA[206:203]
+		AdcGain=8,                      # GCR_DATA[206:203]
 		AdcIdischarge=28,               # GCR_DATA[212:207]
 		AdcIcharge=28,                  # GCR_DATA[218:213]
 		AdcThreshold=16) :              # GCR_DATA[223:219]

@@ -3,108 +3,67 @@
 #                                        VLSI Design Laboratory
 #                               Istituto Nazionale di Fisica Nucleare (INFN)
 #                                   via Giuria 1 10125, Torino, Italy
+#
 #----------------------------------------------------------------------------------------------------
 # {Trace}
-# [Filename]      Acquisition.py [CLASS]
-# [Project]       CHIPIX65 demonstrator PyROOT-based DAQ
+# [Filename]      acquisition.py [SCRIPT]
+# [Project]       CHIPIX65 pixel ASIC demonstrator
 # [Author]        Luca Pacher - pacher@to.infn.it
 # [Version]       1.0
 # [Language]      Python/ROOT
-# [Created]       Oct 22, 2017
-# [Description]   Acquisition Python class, implements CHIPIX_Acquisition.vi FSM
-# [Notes]         -
+# [Created]       Oct 17, 2017
+# [Description]   First trial to implement free-running data readout from pixels. Will be moved 
+#                 into a class. Ref. to CHIPIX_Acquisition.vi for the source code in LabView.
+#
+# [Notes]         Usage:
+#
+#                 ./bin/lin/pychipix ./user/scripts/acquisition.py
 # {Trace}
 #----------------------------------------------------------------------------------------------------
+
+
+## STL components
+#import ... 
+
+
 
 ## ROOT components
 import ROOT
 
+ROOT.gStyle.SetOptStat(0)
 
-## user-defined components
-from tasks import *
-from registers import GCR, ECCR
-
-from EventPacket import EventPacket
+ROOT.gStyle.SetCanvasDefH(600)
+ROOT.gStyle.SetCanvasDefW(600)
 
 
-class Acquisition(object) :
+global hMap
 
-	##________________________________________________________________________________
-	def __init__(self,
-		boardNumber=0
-		commandTimeoutMilliSeconds=20,
-		eventsTimeoutMilliSeconds=20,
-		gcr=GCR(),
-		eccr=ECCR(),
-		#pcr=PCR(),
-		txDelay=0,
-		frameCounterEventEnable=0,
-		extTriggerEnable=0,
-		extTriggerTestPulseEnable=0,
-		extTriggerTestPulseCounterMax=200,
-		triggerEnable=0,
-		triggerDelay=0,
-		binOutputFile="./output.bin") :
+hMap = ROOT.TH2F("hMap", "", 64, -0.5, 63.5, 64, -0.5, 63.5)
 
+hMap.Draw("colz")
 
-		## board number
-		self.fBoardNumber = boardNumber
+hMap.GetXaxis().SetNdivisions(64, ROOT.kFALSE)
+hMap.GetYaxis().SetNdivisions(64, ROOT.kFALSE)
 
-		## timeouts
-		self.fCommandTimeoutMilliSeconds = commandTimeoutMilliSeconds
-		self.fEventsTimeoutMilliSeconds = eventsTimeoutMilliSeconds
+hMap.GetXaxis().SetLabelSize(0.0)
+hMap.GetYaxis().SetLabelSize(0.0)
 
-		## GCR and ECCR configuration
-		self.fGCR  = gcr
-		self.fECCR = eccr
+ROOT.gPad.SetGridx()
+ROOT.gPad.SetGridy()
 
-		## TX delay
-		self.fTxDelay = txDelay
-
-		## other settings
-		self.fFrameCounterEventEnable = frameCounterEventEnable
-		self.fExtTriggerEnable              = extTriggerEnable
-		self.fExtTriggerTestPulseEnable     = extTriggerTestPulseEnable
-		self.fExtTriggerTestPulseCounterMax = extTriggerTestPulseCounterMax
-		self.fTriggerEnable                 = triggerEnable
-		self.fTriggerDelay                  = triggerDelay
-
-
-
-
-	##________________________________________________________________________________
-	def Init(self) :
-		pass
-
-
-
-	##________________________________________________________________________________
-	def ProgramECCR(self.fECCR) :
-
-		writeECCR(self.fECCR)
-
-
-	##________________________________________________________________________________
-	def ProgramGCR(self, self.fGCR) :
-
-		writeGCR(self.fGCR)
-
-
-	##________________________________________________________________________________
-	def Run(self) :
-		pass
-
-
-
+ROOT.gStyle.SetGridStyle(0)
+ROOT.gStyle.SetGridColor(12)
 """
-
-
-
-
+for i in range(64) :
+	for j in range(64) :
+		hMap.Fill(i, j, -1)    # just to have a nice blue background for the pixel map
+"""
+ROOT.gPad.Modified()
+ROOT.gPad.Update()
 
 
 ############################
-##   binary output file   ##
+##   binary  utput file   ##
 ############################
 
 
@@ -121,8 +80,8 @@ hPacketSize.SetXTitle("packet size [Bytes]")
 hPacketSize.SetYTitle("entries")
 
 
-hPacketSize.Draw()
-ROOT.gPad.SetLogy()
+#hPacketSize.Draw()
+#ROOT.gPad.SetLogy()
 
 
 ###########################
@@ -137,7 +96,7 @@ gcr.SetParameter( 1,    1)         #   1. TO:  PWM delay   default = 0
 gcr.SetParameter( 2,    3)         #   2. TO:  PWM high    default = 20
 gcr.SetParameter( 3, 3980)         #   3. TO:  PWM low     default = 3980
 gcr.SetParameter( 4,  100)         #   4. TO:  ICTRL_TOT   default = 100
-gcr.SetParameter( 5,   68)         #   5. TO:  VTH_DISC    default = 1023
+gcr.SetParameter( 5,   65)         #   5. TO:  VTH_DISC    default = 1023
 gcr.SetParameter( 6,  450)         #   6. TO:  VBL_DISC    default = 450
 gcr.SetParameter( 7,  100)         #   7. TO:  IBIASP1     default = 100
 gcr.SetParameter( 8,  150)         #   8. TO:  IBIASP2     default = 150
@@ -209,6 +168,15 @@ eventsTimeoutMilliSeconds = 20
 ##########################################
 ##   trigger/test-pulse configuration   ##
 ##########################################
+
+frameCounterEventEnable = 0
+
+extTriggerEnable = 0
+extTriggerTestPulseEnable = 0
+extTriggerTestPulseCounterMax = 200
+
+triggerEnable = 0
+triggerDelay = 0
 
 
 
@@ -382,10 +350,12 @@ eventsUdpSocket.bind((c.GetLocalAddress(), c.GetRemoteEventsPort()))
 
 i = 0
 
-#while(i != -1) :
+hitCounter = 0
+
+while(i != -1) :
 
 ## **DEBUG: just one-event acquisition
-while(i <= 1) :
+#while(i <= 1) :
 
 	try :
 
@@ -429,27 +399,50 @@ while(i <= 1) :
 
 
 			## **DEBUG
-			print "Packet header: %s" % packetHeader.encode("hex")
-			print "Packet number: %d" % packetNumber
-			print "Packet size:   %d" % packetSizeBytes
-			print "Pixel regions: %d" % firedPixelRegions
-			print "Packet data:   %s" % packetData.encode("hex")
+			#print "Packet header: %s" % packetHeader.encode("hex")
+			#print "Packet size:   %d" % packetSizeBytes
+			#print "Pixel regions: %d" % firedPixelRegions
+			#print "Packet data:   %s" % packetData.encode("hex")
 
 
 			## events
-			s = packetData.encode("hex")
+			#s = packetData.encode("hex")
 
 			## split each pixel-region event from k-codes
-			l = s.split("3c3c03")
-
-			for e in l[1:] :
-
-				## skip 1-Byte \x00 each 2-Bytes
-				pixelRegionEvent = e[0:4] + e[6:10] + e[12:16] + e[18:22]
-				print "%d \t %s" % (len(pixelRegionEvent), pixelRegionEvent)
+			l = packetData.split("\x3c\x3c\x03")
 
 
+			if(len(l) != 0) :
 
+				for word in l[1:] :
+
+
+					pixelRegionEvent = word[10] + word[9] + word[7] + word[6] + word[4] + word[3] + word[1] + word[0]
+
+			
+					pixelRegionEventBinaryString = format(int(pixelRegionEvent.encode("hex"), 16), "064b")
+
+					regionCol = int(pixelRegionEventBinaryString[ 0: 4], 2)
+					regionRow = int(pixelRegionEventBinaryString[14:18], 2)
+					hitMap    =     pixelRegionEventBinaryString[18:34]
+
+					for i in range(16) :
+	
+						if(int(hitMap[15-i]) == 1) :
+	
+							regionPixelRow = i % 4
+							regionPixelCol = i / 4
+
+							pixelRow = 4*regionRow + regionPixelRow
+							pixelCol = 4*regionCol + regionPixelCol
+
+							hMap.Fill(pixelCol, pixelRow) ; hitCounter += 1
+
+			
+			if(hitCounter % 1000 == 0) :
+				ROOT.gPad.Modified()
+				ROOT.gPad.Update()
+			
 			## increment counter
 			i += 1
 
@@ -523,4 +516,3 @@ disconnect()
 
 binFile.close()
 
-"""

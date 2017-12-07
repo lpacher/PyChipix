@@ -10,8 +10,8 @@
 # [Author]        Luca Pacher - pacher@to.infn.it
 # [Version]       1.0
 # [Language]      Python/ROOT
-# [Created]       Sep 1, 2017
-# [Description]   Class for events from pixels. Implements CHIPIX_EventPacket.ctl
+# [Created]       Oct 22, 2017
+# [Description]   Class for raw UDP event packets
 # [Notes]         -
 # {Trace}
 #----------------------------------------------------------------------------------------------------
@@ -32,49 +32,47 @@ EventPacket() - constructor
 class EventPacket(object) :
 
 	##________________________________________________________________________________
-	def __init__(self, timestamp=0, pixelNumber=0, tot=0) :
+	def __init__(self, replyString="\xdc\xba\x00\x00\x00\x00\x00\x17\x3c\x3c\x03\x01\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00") :
 
-		self.fTimestamp   = timestamp
-		self.fPixelNumber = pixelNumber
-		self.fTOT         = tot
+		self.fReplyString = replyString
 
-
-
-
-	##________________________________________________________________________________
-	def GetPixelNumber(self) :
-
-		return self.fPixelNumber
+		## Bytes slices
+		self.fPacketHeader    = replyString[0:2]
+		self.fPacketNumber    = replyString[2:6]
+		self.fPacketSizeBytes = replyString[6:8]
+		self.fPacketData      = replyString[8:self.GetPacketSizeBytes()]
 
 
 	##________________________________________________________________________________
-	def GetTimestamp(self) :
+	def GetPacketData(self) :
 
-		return self.fTimestamp
-
-
-	##________________________________________________________________________________
-	def GetTOT(self) :
-
-		return self.fTOT
-
+		return self.fPacketData
 
 	##________________________________________________________________________________
-	def SetPixelNumber(selfi, pixelNumberValue) :
+	def GetPacketHeader(self) :
 
-		self.fPixelNumber = pixelNumberValue
-
-
-	##________________________________________________________________________________
-	def SetTimestamp(selfi, timestampValue) :
-
-		self.fTimestamp = timestampValue
-
+		return self.fPacketHeader
 
 	##________________________________________________________________________________
-	def SetTOT(self, totValue) :
+	def GetPacketNumber(self) :
 
-		self.fTOT = totValue
+		return int(self.fPacketNumber.encode("hex"), 16)
+
+	##________________________________________________________________________________
+	def GetPacketSizeBytes(self) :
+
+		return int(self.fPacketSizeBytes.encode("hex"), 16)
+
+	##________________________________________________________________________________
+	def GetPixelRegionEvents(self, kCode="\x3c\x3c\x03") :
+
+		return self.fPacketData.split(kCode)[1:]
+
+	##________________________________________________________________________________
+	def GetReplyString(self) :
+
+		return self.fReplyString
+
 
 
 """end class"""

@@ -1,0 +1,98 @@
+
+##################################
+##   ONE event packet example   ##
+##################################
+
+
+"event packet" = 1x header (8-Bytes) + Nx (k-code + 64-bit pixel region data)
+
+pixel-region data = 64-bit
+
+1  2  3  4  5  6  7  8    9  10   11 12 13 14 15 16 17 18 19 20 21 22 23   24 25   26 27 28 29 30 31 32 33 34 35 36 37 38   <= 30-Bytes packet !
+
+dc ba 00 00 00 00 00 26 | 3c 3c | 03 0a 00 00 00 00 00 00 c8 00 7c 6a 00 | 3c 3c | 03 0a 00 00 00 80 00 00 40 00 25 68 00
+
+
+dcba = event header
+
+00 00 00 00 = packet number, 0 (first packet)
+
+00 26 = packet size = 38-Bytes, header included
+
+k-code = 3c3c03 => indicates start-of-frame referred to a pixel-region event
+
+
+Each "pixel region frame" is 15-Bytes, k-code included
+
+e.g. 3c 3c 03 | 0a 00 00 00 00 00 00 c8 00 7c 6a 00
+
+                      xx       xx       xx       xx      <= butto via 1-Byte ogni 2-Bytes 
+
+Infatti Ennio fa un if (counter != 13 and counter != 16 and counter != 19 and counter != 22)
+
+   => 04 00 00 00 00 c8 7c 6a = 8-Bytes = 64-bit = pixel-region event !!!
+
+Poi flippo la successione di bytes Byte-per-Byte al contrario (magari gia` in binario).
+
+
+Pixel region data = 8-Bytes = 64-bit = 4-bit PRcol | 10-bit Gray timestamp |
+
+
+#################################
+##   2 events packet example   ##
+#################################
+
+dc ba 00 00 00 00 00 17 \
+                        3c 3c 03 0a 00 00 00 00 00 00 50 00 c8 4a 00 \
+dc ba 00 00 00 01 00 44 \
+                        3c 3c 03 0a 00 00 00 00 00 00 50 00 28 4d 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 50 00 50 42 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 50 00 cc 44 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 50 00 38 41 00
+
+
+#################################
+##   3 events packet example   ##
+#################################
+
+                                |      xx       xx       xx       xx
+dc ba 00 00 00 00 00 71 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 30 69 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 34 62 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 7c 63 00 \
+                        3c 3c 03 00 00 00 00 00 00 00 c8 00 e4 65 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 cc 6f 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 dc 6e 00 \
+                        3c 3c 03 0a 00 00 00 00 00 20 80 00 bc 48 00 \
+dc ba 00 00 00 01 00 26 \
+                        3c 3c 03 00 00 00 00 40 00 00 c0 00 ad 67 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 90 6d 00 \
+dc ba 00 00 00 02 00 8f \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 d4 61 00 \
+                        3c 3c 03 00 00 00 00 00 00 00 c8 00 3c 6c 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 54 6d 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 64 6d 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 b0 63 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 9c 6f 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 64 63 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 98 63 00 \
+                        3c 3c 03 0a 00 00 00 00 00 00 c8 00 60 67 00
+
+
+
+
+##############################
+##   Richardi DAQ example   ##
+##############################
+
+dc ba 00 00 00 00 00 17 \
+                        3c 3c 03 00 00 00 00 00 00 00 e0 00 40 e3 00 
+dc ba 00 00 00 01 00 17 \
+                        3c 3c 03 02 00 00 00 00 00 00 44 00 18 26 00 
+dc ba 00 00 00 02 00 17 \
+                        3c 3c 03 02 00 00 00 00 00 00 44 00 98 2e 00 
+dc ba 00 00 00 03 00 17 \
+                        3c 3c 03 00 00 00 00 00 00 00 e0 00 2c e6 00
+
+
+
